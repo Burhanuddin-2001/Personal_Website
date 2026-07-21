@@ -1,0 +1,15 @@
+{
+  "name": "developer-portfolio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A minimalist, dark-themed single-page developer portfolio. Vanilla JS + Vite, engineered for a low-friction migration to React.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}

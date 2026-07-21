@@ -1,0 +1,305 @@
+/* Projects — carousel coverflow, cards, and details panel. */
+
+.projects__carousel {
+  margin-bottom: var(--space-8);
+}
+
+/* --- Carousel frame --- */
+.carousel {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.carousel:focus-visible {
+  box-shadow: var(--ring-focus);
+  border-radius: var(--radius-lg);
+}
+
+.carousel__viewport {
+  position: relative;
+  height: clamp(360px, 55vh, 520px); 
+  perspective: 1400px;
+  overflow: clip;
+  touch-action: pan-y; /* allow vertical scroll; we handle horizontal swipe */
+}
+
+.carousel__track {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* --- Nav buttons --- */
+.carousel__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard);
+}
+
+.carousel__nav:hover:not(:disabled) {
+  background: var(--color-elevated);
+  border-color: var(--color-border-strong);
+}
+
+.carousel__nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* --- Cards --- */
+.project-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(260px, 74vw, 360px);
+  /* translate/scale/rotateY are set inline by Carousel.js; this baseline
+     centres the card before JS runs and defines the animated properties. */
+  transform: translate(-50%, -50%);
+  min-height: clamp(300px, 42vh, 400px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  backface-visibility: hidden;
+  transition:
+    transform var(--dur-base) var(--ease-standard),
+    opacity var(--dur-base) var(--ease-standard),
+    border-color var(--dur-base) var(--ease-standard);
+  will-change: transform, opacity;
+}
+
+.project-card.is-center {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-elevated);
+  cursor: default;
+}
+
+.project-card:not(.is-center) {
+  cursor: pointer;
+}
+
+.project-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.project-card__name {
+  font-size: var(--fs-h3);
+}
+
+.project-card__tagline {
+  color: var(--color-text-muted);
+  font-size: var(--fs-body);
+  margin: 0;
+}
+
+.project-card__tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+.project-card__explore {
+  align-self: flex-start;
+  margin-top: var(--space-3);
+}
+
+/* Explore is only actionable on the centre card. */
+.project-card:not(.is-center) .project-card__explore {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* --- Status chips --- */
+.project-card__status,
+.details__status {
+  flex: none;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.project-card__status--live {
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 40%, transparent);
+}
+.project-card__status--progress {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
+}
+.project-card__status--archived {
+  color: var(--color-text-faint);
+}
+
+/* --- Tech chips (shared) --- */
+.chip {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.55rem;
+}
+
+/* --- Pagination dots --- */
+.carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.carousel__dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.carousel__dot.is-active {
+  background: var(--color-accent);
+  transform: scale(1.4);
+}
+
+/* --- Details panel --- */
+.details {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  scroll-margin-top: var(--space-6);
+}
+
+.details:focus-visible {
+  box-shadow: var(--ring-focus);
+}
+
+.details__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.details__name {
+  font-size: var(--fs-h3);
+}
+
+.details__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+.details__label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-faint);
+  margin-bottom: var(--space-2);
+}
+
+.details__block p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.details__features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.details__features li {
+  position: relative;
+  padding-left: var(--space-4);
+  color: var(--color-text-muted);
+}
+
+.details__features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.details__tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.details__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.details__shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.details__shot {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+/* Larger layouts: two-column details grid, roomier carousel gap. */
+@media (min-width: 768px) {
+  .carousel {
+    gap: var(--space-4);
+  }
+
+  .details__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .details__block--full {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card {
+    will-change: auto;
+  }
+}

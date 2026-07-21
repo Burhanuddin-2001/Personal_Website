@@ -1,0 +1,161 @@
+/* Contact — centred form as the focal point. */
+
+.contact__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.contact__form-wrap {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* --- Form --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.form__hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-faint);
+  margin-top: calc(var(--space-1) * -1);
+}
+
+.form__control {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.form__control::placeholder {
+  color: var(--color-text-faint);
+}
+
+.form__control:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+.form__control[aria-invalid='true'] {
+  border-color: #f2777a;
+}
+
+textarea.form__control {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.form__error {
+  font-size: var(--fs-xs);
+  color: #f2999b;
+  min-height: 1em;
+}
+
+.form__submit {
+  align-self: flex-start;
+}
+
+.form__status {
+  font-size: var(--fs-sm);
+  min-height: 1.2em;
+}
+
+.form__status--success {
+  color: var(--color-success);
+}
+
+.form__status--error {
+  color: #f2999b;
+}
+
+/* --- Socials --- */
+.socials {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.socials__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  transition:
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.socials__link:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+  transform: translateY(-2px);
+}
+
+/* --- Back to top --- */
+.back-to-top {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  transition:
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.back-to-top:hover {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socials__link:hover {
+    transform: none;
+  }
+}
+
+/* Honeypot — genuinely hidden (not the visually-hidden/clip utility), so it
+   is absent from the accessibility tree; a screen-reader user should never
+   be able to reach or fill it. Web3Forms' reserved spam field. */
+.form__honeypot {
+  display: none;
+}
+
+/* Section-level reveal timing/logic is shared globally via .reveal in
+   styles/layout.css (opacity/transform + .is-visible), driven by the
+   IntersectionObserver in lib/reveal.js. No section-specific override
+   needed here. */

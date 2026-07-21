@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="Developer portfolio — selected projects, background, and contact."
+    />
+
+    <!-- Open Graph / Twitter Card — link-preview metadata. Title kept as
+         the locked page branding ("My Den"); description mirrors the meta
+         description above for consistency. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="My Den" />
+    <meta
+      property="og:description"
+      content="Developer portfolio — selected projects, background, and contact."
+    />
+    <meta property="og:image" content="/assets/profile.jpg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="My Den" />
+    <meta
+      name="twitter:description"
+      content="Developer portfolio — selected projects, background, and contact."
+    />
+    <meta name="twitter:image" content="/assets/profile.jpg" />
+
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <title>My Den</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#hero">Skip to content</a>
+
+    <!-- The welcome overlay is created and controlled by JS (WelcomeScreen). -->
+
+    <main id="main">
+      <section id="hero" class="section section--hero" aria-labelledby="hero-name"></section>
+      <section id="projects" class="section section--projects" aria-labelledby="projects-title"></section>
+      <section id="contact" class="section section--contact" aria-labelledby="contact-title"></section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

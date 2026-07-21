@@ -1,0 +1,111 @@
+/* Hero — reversed two-column (image left, text right) at md+.
+   Mobile-first: single column, image first. */
+
+.hero__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: center;
+  width: 100%;
+}
+
+.hero__col--image {
+  display: flex;
+  justify-content: center;
+}
+
+.hero__avatar {
+  width: clamp(180px, 42vw, 320px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 6px;
+  background: linear-gradient(150deg, var(--color-border-strong), transparent 60%);
+  box-shadow: var(--shadow-elevated);
+}
+
+.hero__avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--color-surface);
+}
+
+.hero__name {
+  font-size: var(--fs-display);
+  margin-bottom: var(--space-2);
+}
+
+.hero__title {
+  font-size: var(--fs-lead);
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+}
+
+.hero__intro {
+  font-size: var(--fs-lead);
+  color: var(--color-text-muted);
+  max-width: 42ch;
+  margin-bottom: var(--space-6);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Desktop: two columns, IMAGE FIRST (left) — the intentional reversal. */
+@media (min-width: 768px) {
+  .hero__grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-8);
+  }
+
+  .hero__col--image {
+    order: 0; /* left */
+  }
+
+  .hero__col--text {
+    order: 1; /* right */
+  }
+}
+
+/* --- Reveal: staggered fade-up, triggered after the welcome overlay. --- */
+.section--hero .reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+
+.section--hero.is-revealed .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.section--hero.is-revealed .hero__col--image {
+  transition-delay: 40ms;
+}
+.section--hero.is-revealed .hero__name {
+  transition-delay: 120ms;
+}
+.section--hero.is-revealed .hero__title {
+  transition-delay: 200ms;
+}
+.section--hero.is-revealed .hero__intro {
+  transition-delay: 280ms;
+}
+.section--hero.is-revealed .hero__actions {
+  transition-delay: 360ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section--hero .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
