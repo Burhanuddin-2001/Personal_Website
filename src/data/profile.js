@@ -24,8 +24,9 @@ export const profile = {
 };
 
 // Contact form submission endpoint (third-party service — see README).
-// Loaded from VITE_WEB3FORMS_ENDPOINT env var. Leaving it empty makes
-// the form fall back to a client-side demo success state.
+// Loaded from VITE_WEB3FORMS_ENDPOINT and VITE_WEB3FORMS_ACCESS_KEY env vars.
+// Leaving either empty makes the form fall back to a client-side demo success state.
 export const contactConfig = {
   endpoint: import.meta.env.VITE_WEB3FORMS_ENDPOINT || '',
+  accessKey: import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '',
 };

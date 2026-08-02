@@ -7,10 +7,10 @@ import { el } from '../../lib/dom.js';
 import { announce } from '../../lib/announcer.js';
 
 /**
- * @param {{ endpoint: string }} config
+ * @param {{ endpoint: string, accessKey: string }} config
  * @returns {HTMLFormElement}
  */
-export function createContactForm({ endpoint }) {
+export function createContactForm({ endpoint, accessKey }) {
   const status = el('p', {
     class: 'form__status',
     role: 'status',
@@ -56,7 +56,7 @@ export function createContactForm({ endpoint }) {
     ]
   );
 
-  form.addEventListener('submit', (e) => handleSubmit(e, { form, endpoint, submitBtn, status }));
+  form.addEventListener('submit', (e) => handleSubmit(e, { form, endpoint, accessKey, submitBtn, status }));
   return form;
 }
 
@@ -96,7 +96,7 @@ function field({ id, name, label, multiline = false, autocomplete, inputmode, hi
   ]);
 }
 
-async function handleSubmit(e, { form, endpoint, submitBtn, status }) {
+async function handleSubmit(e, { form, endpoint, accessKey, submitBtn, status }) {
   e.preventDefault();
   clearErrors(form);
   status.textContent = '';
@@ -113,10 +113,13 @@ async function handleSubmit(e, { form, endpoint, submitBtn, status }) {
 
   try {
     if (endpoint) {
+      const formData = new FormData(form);
+      if (accessKey) formData.append('access_key', accessKey);
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { Accept: 'application/json' },
-        body: new FormData(form),
+        body: formData,
       });
 
       // Web3Forms can answer 200 OK with { success: false, message } for

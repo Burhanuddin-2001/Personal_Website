@@ -30,16 +30,15 @@ Content is separated from code:
 - **`public/assets/`** — your photo and résumé PDF live here; referenced by
   `avatar.src` / `resumeUrl` in `src/data/profile.js`. Add project
   `screenshots/` if desired.
-- **Contact form** — set `contactConfig.endpoint` in `src/data/profile.js` to your
-  [Web3Forms](https://web3forms.com) endpoint (either
-  `https://api.web3forms.com/submit/<your-key>` or `.../submit` with the key
-  sent as an `access_key` field — both are supported by their API). Left
-  empty, the form runs in a client-side demo mode (validates + shows success,
-  delivers nothing).
+- **Contact form** — set `VITE_WEB3FORMS_ENDPOINT` and
+  `VITE_WEB3FORMS_ACCESS_KEY` in `.env` (get both from your
+  [Web3Forms](https://web3forms.com) dashboard). Endpoint should be
+  `https://api.web3forms.com/submit` (fixed), and the access key is a
+  UUID-like string you'll find in your Web3Forms account. Left empty, the
+  form runs in a client-side demo mode (validates + shows success, delivers
+  nothing).
   - The honeypot field is named `botcheck` — that's Web3Forms' specific
-    reserved spam-protection field name. If you ever switch providers (e.g.
-    Formspree, which instead uses `_gotcha`), update the field name in
-    `ContactForm.js` to match.
+    reserved spam-protection field name.
   - Success/failure is read from the JSON response body (`{ success, message }`),
     not just the HTTP status — Web3Forms can return `200 OK` with
     `success: false` for some rejections.
