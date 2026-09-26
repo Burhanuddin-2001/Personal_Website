@@ -1,7 +1,45 @@
-node_modules
-dist
+# ─── Dependencies ──────────────────────────────────────────────
+node_modules/
+
+# ─── Build output ──────────────────────────────────────────────
+dist/
+dist-ssr/
+.vite/
 *.local
-.DS_Store
+
+# ─── Environment / secrets ─────────────────────────────────────
 .env
-.env.*.local
-.claude
+.env.*
+!.env.example
+
+# ─── Frozen old site (kept in git history) ─────────────────────
+v1/
+
+# ─── Unused source material (not referenced by the app) ────────
+src/assets/profile-source.avif
+
+# ─── Unused font files (CSS only loads the 4 .ttf files) ───────
+src/assets/fonts/**/*.woff2
+src/assets/fonts/Courier_Prime/CourierPrime-BoldItalic.ttf
+
+# ─── Private notes ─────────────────────────────────────────────
+*.md
+!README.md
+
+# ─── Editor folders ────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ─── Logs & caches ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+*.tsbuildinfo
+
+# ─── OS junk ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

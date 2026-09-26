@@ -2,45 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
-    <meta
-      name="description"
-      content="Developer portfolio — selected projects, background, and contact."
-    />
+    <meta name="description" content="Burhanuddin - cybersecurity engineer. He builds the tools used to compromise systems, so he can engineer the countermeasures that stop them." />
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://burhanuddin2001.me/" />
+    <meta name="theme-color" content="#1a1613" />
 
-    <!-- Open Graph / Twitter Card — link-preview metadata. Title kept as
-         the locked page branding ("My Den"); description mirrors the meta
-         description above for consistency. -->
+    <!-- Social preview. og:image MUST be an absolute URL - LinkedIn, WhatsApp
+         and Slack all ignore a relative one. -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="My Den" />
-    <meta
-      property="og:description"
-      content="Developer portfolio — selected projects, background, and contact."
-    />
-    <meta property="og:image" content="/assets/profile.jpg" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="My Den" />
-    <meta
-      name="twitter:description"
-      content="Developer portfolio — selected projects, background, and contact."
-    />
-    <meta name="twitter:image" content="/assets/profile.jpg" />
+    <meta property="og:site_name" content="Burhanuddin" />
+    <meta property="og:url" content="https://burhanuddin2001.me/" />
+    <meta property="og:title" content="Burhanuddin - Cybersecurity Engineer" />
+    <meta property="og:description" content="Building the tools used to compromise systems, so I can engineer the exact countermeasures to stop them." />
+    <meta property="og:image" content="https://burhanuddin2001.me/assets/og.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A top-secret personnel dossier on a desk, labelled Burhanuddin, Cybersecurity Engineer." />
+    <meta property="og:locale" content="en_US" />
 
-    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-    <title>My Den</title>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Burhanuddin - Cybersecurity Engineer" />
+    <meta name="twitter:description" content="Building the tools used to compromise systems, so I can engineer the exact countermeasures to stop them." />
+    <meta name="twitter:image" content="https://burhanuddin2001.me/assets/og.jpg" />
+    <title>Burhanuddin - Cybersecurity Engineer</title>
   </head>
   <body>
-    <a class="skip-link" href="#hero">Skip to content</a>
-
-    <!-- The welcome overlay is created and controlled by JS (WelcomeScreen). -->
-
-    <main id="main">
-      <section id="hero" class="section section--hero" aria-labelledby="hero-name"></section>
-      <section id="projects" class="section section--projects" aria-labelledby="projects-title"></section>
-      <section id="contact" class="section section--contact" aria-labelledby="contact-title"></section>
-    </main>
-
-    <script type="module" src="/src/main.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

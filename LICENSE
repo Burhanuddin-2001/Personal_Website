@@ -1,0 +1,123 @@
+Personal Website License
+
+Copyright (c) 2026 Burhanuddin-2001. All rights reserved except as expressly
+granted below.
+
+1. DEFINITIONS
+
+   "Licensor" means Burhanuddin-2001, the copyright holder of the Project.
+
+   "Project" means the contents of this repository, including the Software,
+   the Design and the Protected Content.
+
+   "Software" means the source code, markup and stylesheets in the Project.
+
+   "Design" means the layout, structure, visual design, animation and
+   interaction patterns expressed in the Software.
+
+   "Protected Content" means the Licensor's name, likeness, identity and
+   personal data, and all content that describes the Licensor, including
+   without limitation: photographs and images of the Licensor; the résumé;
+   the biography and other written copy; project descriptions; contact
+   details and form credentials; the data in src/profile.js and
+   src/projects.js; and the social preview image (public/assets/og.jpg).
+
+   "Third-Party Materials" means any material in the Project that is owned
+   by a person other than the Licensor, as described in Section 5.
+
+   "Non-Commercial Purpose" means a purpose not primarily intended for or
+   directed toward commercial advantage or monetary compensation. Operating
+   a personal portfolio or personal website for oneself is a Non-Commercial
+   Purpose. Building, selling or licensing a website, template or product
+   for payment is not.
+
+   "You" means any individual or entity exercising the rights granted here.
+
+2. GRANT OF RIGHTS
+
+   Subject to the conditions and restrictions of this License, the Licensor
+   grants You a worldwide, royalty-free, non-exclusive, non-transferable
+   license to use, copy, study, modify, recreate and distribute the Software
+   and the Design, and works based on them, solely for Non-Commercial
+   Purposes, including:
+
+   (a) recreation of the Design;
+   (b) modification of the Software;
+   (c) learning and teaching; and
+   (d) reuse of the layout, structure and design ideas in Your own work.
+
+   No other rights are granted.
+
+3. CONDITIONS
+
+   (a) Any copy or substantial portion of the Software that You distribute
+       must include the above copyright notice and this License.
+
+   (b) Before You publish or distribute any work based on the Project, You
+       must remove all Protected Content from it.
+
+4. RESTRICTIONS
+
+   You may not:
+
+   (a) use the Software or the Design, or any work based on them, for any
+       purpose other than a Non-Commercial Purpose;
+
+   (b) copy, reproduce, republish, distribute, modify or otherwise use any
+       Protected Content;
+
+   (c) use the Licensor's name, likeness or identity to impersonate the
+       Licensor, or to state or imply that the Licensor endorses, sponsors
+       or is affiliated with You or Your work; or
+
+   (d) sublicense the rights granted in Section 2.
+
+   The Protected Content is not licensed under this License in any form.
+
+5. THIRD-PARTY MATERIALS
+
+   The Licensor does not own, and this License does not grant any rights in,
+   Third-Party Materials. These include:
+
+   (a) the fonts in src/assets/fonts, which are distributed under their own
+       licenses;
+   (b) the Stanford University seal (src/assets/stanford-seal.webp), which
+       is owned by Stanford University; and
+   (c) the software packages listed in package.json, which are distributed
+       under their own licenses.
+
+   Your use of Third-Party Materials is governed solely by their owners'
+   terms.
+
+6. RESERVATION OF RIGHTS
+
+   The Licensor retains all right, title and interest in the Project,
+   except Third-Party Materials. All rights not expressly granted in this
+   License are reserved. Nothing in this License limits any use that
+   applicable law permits without a license, such as fair use or fair
+   dealing.
+
+7. TERMINATION
+
+   Your rights under this License terminate automatically if You breach any
+   of its terms. On termination, You must stop all use and distribution of
+   the Project and any work based on it.
+
+8. OTHER PERMISSIONS
+
+   Uses outside the scope of this License, including commercial use,
+   require the Licensor's prior written permission. Requests may be made
+   through https://burhanuddin2001.me/ or burhanuddin122001@gmail.com.
+
+9. DISCLAIMER OF WARRANTY
+
+   THE PROJECT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+10. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE PROJECT OR THE USE OF OR OTHER
+   DEALINGS IN THE PROJECT.

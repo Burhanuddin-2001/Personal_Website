@@ -1,4 +1,4 @@
-// Project dataset — the single source of truth for the carousel and details
+// Project dataset — the single source of truth for the case index and the
 // panel. Components receive this as an argument, so migrating to a fetch/CMS
 // later touches only the loader, not the UI.
 //
@@ -64,11 +64,11 @@ export const projects = [
     tagline: "Knocking on 65,000 computer doors at the exact same time.",
     tech: ["Python", "Socket API", "I/O Multiplexing"],
     status: "Live",
-    overview: "Computers have thousands of invisible 'doors' (ports) that can be open or closed. Checking them one by one takes almost 18 hours. I built a tool that rings every single doorbell at the exact same time and just listens for who answers, finishing the job in a few seconds.",
-    problem: "Waiting for a slow, locked computer door to respond takes 1 minute each. With 65,535 doors, that is a 17+ hour wait! I needed a way to stop waiting in line and check everything simultaneously without freezing the computer.",
+    overview: "Computers have thousands of invisible 'doors' (ports) that can be open or closed. Checking them one by one could take days. I built a tool that rings every single doorbell at the exact same time and just listens for who answers, finishing the job in a few seconds.",
+    problem: "Waiting for a slow, locked computer door to respond can take a full minute each. With 65,535 doors, that could take days! I needed a way to stop waiting in line and check everything simultaneously without freezing the computer.",
     features: [
-      "Checks all 65,535 computer doors in seconds instead of hours.",
-      "Makes the entire scanning process over 4,000 times faster.",
+      "Checks all 65,535 computer doors in seconds instead of days.",
+      "Makes the entire scanning process thousands of times faster.",
       "Automatically cleans up 'dead' connections so the computer doesn't freeze or run out of memory."
     ],
     architecture: "Leave a note: Instead of knocking and waiting, it drops a note and lets the computer call back when it's ready.",

@@ -1,0 +1,1323 @@
+/* =========================================================================
+   THE DOSSIER v2 — the file IS the site.
+
+   Three rules this file exists to enforce:
+     1. The page NEVER scrolls. Only the paper inside the file scrolls.
+     2. The action bar is ALWAYS on screen. Back, close and send are never
+        below the fold.
+     3. One portrait file, the same shape on a phone and on a laptop.
+   ========================================================================= */
+
+/* ------------------------------------------------------------------ fonts
+   Full TTFs, not subsets. v1 subset Special Elite to uppercase only, which
+   meant any rule that forgot text-transform fell back mid-word. No size
+   budget here, so that whole class of bug is simply deleted. */
+@font-face{
+  font-family:'Special Elite';
+  src:url('./assets/fonts/Special_Elite/SpecialElite-Regular.ttf') format('truetype');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Courier Prime';
+  src:url('./assets/fonts/Courier_Prime/CourierPrime-Regular.ttf') format('truetype');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Courier Prime';
+  src:url('./assets/fonts/Courier_Prime/CourierPrime-Bold.ttf') format('truetype');
+  font-weight:700;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Courier Prime';
+  src:url('./assets/fonts/Courier_Prime/CourierPrime-Italic.ttf') format('truetype');
+  font-weight:400;font-style:italic;font-display:swap;
+}
+
+/* ----------------------------------------------------------------- tokens */
+:root{
+  --void:#0e0c0a;
+  --void-2:#1a1510;
+
+  --kraft:#c9ac76;
+  --kraft-lit:#d8bd8b;
+  --kraft-dark:#ab8f5c;
+  --kraft-edge:#8d7444;
+  --paper:#f2ecdd;
+  --paper-2:#e4dac2;
+
+  --ink:#191612;          /* 8.3:1 on kraft */
+  --ink-2:#443d33;        /* 4.9:1 on kraft */
+  --ink-3:#6b6155;
+
+  --red:#7a1a10;          /* 5.1:1 on kraft — meaningful red */
+  --red-soft:#9d2b20;     /* decoration only */
+  --red-bright:#e0553f;
+  --green:#1c5426;
+  --thread:#2c4a6e;
+
+  --font-d:'Special Elite','Courier New',monospace;
+  --font-b:'Courier Prime','Courier New',monospace;
+
+  --tabw:clamp(30px,7vw,42px);   /* how far the bookmarks stick out */
+  --gap:clamp(12px,2.2vw,28px);
+
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-snap:cubic-bezier(.2,.8,.25,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+html,body{
+  height:100%;
+  /* RULE 1. The page never scrolls. */
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--paper);
+  font:16px/1.6 var(--font-b);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* A button does not inherit font. Without this the case-card taglines set
+   no family of their own, fell to the UA's Arial, and every em inside a
+   card was an em of the UA's fixed 13.3px instead of the page's. */
+button{font-family:inherit;font-size:inherit}
+
+#root{height:100%}
+
+/* ============================================================== BACKDROP
+   Not a desk. Just depth, so the file has somewhere to land. */
+.backdrop{position:fixed;inset:0;z-index:0;pointer-events:none}
+.backdrop::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(120% 80% at 50% -14%, rgba(255,196,118,.16), transparent 60%),
+    radial-gradient(90% 70% at 82% 8%,  rgba(255,168,84,.10), transparent 62%),
+    linear-gradient(180deg,#191410 0%, #120f0c 46%, #0b0908 100%);
+}
+.backdrop::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(130% 110% at 50% 44%,
+    transparent 30%, rgba(6,5,4,.5) 70%, rgba(4,3,3,.92) 100%);
+}
+/* static grain. Not animated, so it rasterises once. */
+.grain{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.22;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+/* ================================================================= STAGE
+   perspective lives HERE, and it only reaches the leaves if EVERY element
+   between this one and them carries transform-style:preserve-3d - .shaker,
+   .book, .book__slide. One flat element anywhere in that chain and the whole
+   folder renders orthographic: a page turn becomes a flat horizontal squash
+   with no taper, no page ever lifts, and nothing logs.
+   The same thing happens if any element in the chain picks up a filter, an
+   opacity below 1, or an overflow other than visible - each of those forces
+   transform-style:flat on the element that carries it. */
+.stage{
+  position:fixed;inset:0;
+  display:grid;place-items:center;
+  padding:var(--gap);
+  perspective:2400px;
+  perspective-origin:50% 44%;
+  z-index:2;
+}
+/* preserve-3d is load-bearing: without it the perspective above stops here
+   and the folder below renders flat. */
+.shaker{display:block;will-change:transform;transform-style:preserve-3d}
+
+/* ================================================================ THE BOOK
+   One sheet folded at the spine. The box is always TWO pages wide; closed,
+   you only look at the right half, and .book__slide shifts everything half
+   a page left so that half stays centred on screen. */
+.book{
+  --page-w:min(
+     calc((100dvh - var(--gap) * 2) / 1.38),
+     calc((100vw - var(--gap) * 2 - var(--tabw) * 2) / 2)
+  );
+  position:relative;
+  width:calc(var(--page-w) * 2);
+  height:calc(var(--page-w) * 1.38);
+  transform-style:preserve-3d;
+}
+.book__slide{position:absolute;inset:0;transform-style:preserve-3d}
+
+.book__shadow{
+  position:absolute;left:4%;right:4%;bottom:-5%;height:15%;
+  transform:translateZ(-3px);
+  border-radius:50%;
+  background:radial-gradient(closest-side, rgba(0,0,0,.75), transparent 74%);
+  /* --open-ms is published by App.jsx so this rides the same clock as
+     .book__slide. Hard-coded it was 80ms short and ignored ?slow. */
+  transition:left var(--open-ms,980ms) cubic-bezier(.32,.72,.14,1);
+}
+.book[data-open="false"] .book__shadow{left:50%}
+
+/* the inside of the folder - bare board, seen only while the cover swings */
+.interior{
+  position:absolute;top:0;height:100%;width:50%;
+  transform:translateZ(0px);
+  background-color:#8f7549;
+  background-image:
+    linear-gradient(178deg, #9a7f50 0%, #866c42 62%, #6f5834 100%),
+    radial-gradient(60% 40% at 30% 20%, rgba(0,0,0,.16), transparent 70%);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.35);
+}
+.interior--right{left:50%;border-radius:0 4px 4px 0}
+
+/* ------------------------------------------------------------- the halves */
+.half{position:absolute;top:0;height:100%;width:50%}
+/* The same shadow stack .leaf__face carries, so that when a sheet that has
+   just landed on the right is unmounted, the shadow it was drawing is already
+   being drawn by the half underneath and the swap costs no frame. It lives
+   here and not on .page--right because .leaf__face--front is a .page--right
+   too, and it already has one. */
+.half--right{
+  left:50%;transform:translateZ(1px);
+  border-radius:0 4px 4px 0;
+  box-shadow:
+     2px 2px 6px rgba(12,8,3,.4),
+     14px 20px 44px -18px rgba(8,5,2,.7);
+}
+
+/* the paper of any page */
+.page{
+  position:absolute;inset:0;overflow:hidden;
+  display:flex;flex-direction:column;
+  color:var(--ink);
+  padding:clamp(16px,2.6vw,28px) clamp(15px,2.4vw,26px)
+          clamp(12px,2vw,20px) clamp(20px,3vw,32px);
+  background-color:var(--kraft);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23f)' opacity='.3'/%3E%3C/svg%3E"),
+    radial-gradient(46% 30% at 10% 92%, rgba(92,62,24,.16), transparent 68%),
+    radial-gradient(34% 22% at 92% 10%, rgba(92,62,24,.14), transparent 70%),
+    linear-gradient(174deg, var(--kraft-lit) 0%, var(--kraft) 40%, var(--kraft-dark) 100%);
+}
+.page--right{border-radius:0 4px 4px 0}
+/* the left page is lit from the other side, because it is the other side */
+.page--left{
+  border-radius:3px 0 0 3px;
+  padding-left:clamp(15px,2.4vw,26px);
+  padding-right:clamp(20px,3vw,32px);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23f)' opacity='.3'/%3E%3C/svg%3E"),
+    radial-gradient(40% 26% at 88% 90%, rgba(92,62,24,.15), transparent 70%),
+    linear-gradient(186deg, var(--kraft-lit) 0%, var(--kraft) 40%, var(--kraft-dark) 100%);
+}
+.page--cover{border-radius:3px 5px 5px 3px}
+/* One big CONFIDENTIAL running bottom-left to top-right, under every line of
+   type on the cover. z-index:-1 paints it above the paper's own background
+   and below all in-flow content, and it cannot leak out of the cover face,
+   which is a stacking context already because it carries a transform.
+   Sized off --page-w like everything else on a page, so it never outgrows
+   the paper on a short window. */
+.cover-mark{
+  position:absolute;left:50%;top:50%;z-index:-1;
+  pointer-events:none;user-select:none;-webkit-user-select:none;
+  transform:translate(-50%,-50%) rotate(-31deg);
+  font-family:var(--font-d);
+  font-size:calc(var(--page-w) * .138);
+  letter-spacing:.06em;line-height:1;white-space:nowrap;
+  color:rgba(112,28,16,.19);
+  text-shadow:0 1px 0 rgba(255,246,222,.24);
+}
+/* Nothing is stretched over this face. A full-bleed open button used to be,
+   and it ate the redaction bar's hover and click: the leaf above is
+   preserve-3d, where z-index does not order anything, so no z-index on the
+   photo could climb over it. The bookmarks open the file. */
+
+/* --------------------------------------------------------------- a LEAF
+   Outer element carries the DEPTH. Inner hinge carries the ROTATION. They
+   are never the same element - mixing them makes the depth rotate along
+   with the page and the stacking falls apart. */
+.leaf{
+  position:absolute;left:50%;top:0;width:50%;height:100%;
+  transform-style:preserve-3d;
+  /* The OUTER element is never rotated, so its box always sits over the
+     right half and would swallow every click meant for the right page.
+     Hit-testing has to happen on the faces, which ARE rotated. */
+  pointer-events:none;
+}
+.leaf--cover{transform:translateZ(10px)}
+/* .leaf--rest and .leaf--turn get their translateZ from motion, because
+   it has to animate: a turning sheet passes OVER the right page on the
+   way up and lands ON TOP of whatever is already lying on the left. */
+.leaf__hinge{
+  position:absolute;inset:0;
+  transform-origin:left center;      /* the spine */
+  transform-style:preserve-3d;
+}
+/* A face with backface-visibility:hidden that rotates 180 degrees turns its
+   back to you and DISAPPEARS. So every leaf carries a real second face,
+   pre-rotated, and on the cover that back face is the left page. */
+.leaf__face{
+  position:absolute;inset:0;
+  pointer-events:auto;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:
+     0 1px 0 rgba(255,236,196,.3) inset,
+     2px 2px 6px rgba(12,8,3,.4),
+     14px 20px 44px -18px rgba(8,5,2,.7);
+}
+/* Both faces state their orientation, and the front one has to.
+   THE TRAP: a face is a FLAT element hanging inside a preserve-3d chain. In
+   Chromium, hit-testing inside such a face skips any child that carries a
+   transform of its own - the click falls through to the untransformed parent
+   instead. On the cover that meant the photo, both stamps and the word
+   Confidential were unclickable and un-hoverable, while every plain block
+   beside them worked. Nothing logs; the elements paint perfectly.
+   A transform on the face itself makes it a flattening boundary and the
+   children become hit-testable again. The BACK face always had one -
+   rotateY(180deg) - which is exactly why the redaction bar worked on the
+   resume page and was dead on the cover. rotateY(0deg) is the same statement
+   for the front, and draws nothing differently. */
+.leaf__face--front{transform:rotateY(0deg)}
+.leaf__face--back{transform:rotateY(180deg)}
+.leaf__face--back.page{
+  box-shadow:
+     0 1px 0 rgba(255,236,196,.3) inset,
+    -2px 2px 6px rgba(12,8,3,.4),
+   -14px 20px 44px -18px rgba(8,5,2,.7);
+}
+/* a blank reverse, for a paper with no left-page content of its own */
+.leaf__face--back:not(.page),
+.leaf__face--front:not(.page){
+  background-color:var(--kraft-dark);
+  background-image:linear-gradient(186deg, var(--kraft) 0%, var(--kraft-dark) 100%);
+  display:grid;place-items:center;
+}
+/* Every face that is not the live page carries `inert` (App.jsx), which
+   removes it from the tab order, the a11y tree AND hit-testing in one go.
+   The blanket rule that used to sit here also killed the mouse on the
+   live left page, which rides on the top sheet's BACK face. */
+.leaf__mark{
+  font-family:var(--font-d);font-size:12px;letter-spacing:.3em;
+  color:rgba(25,22,18,.28);transform:rotate(-90deg);
+}
+
+/* A face in the air throws no drop shadow of its own: that shadow is painted
+   in the face's plane and would turn with it. .castshade does the job on the
+   paper underneath, and the shadow comes back once the sheet is lying down. */
+.leaf__face{transition:box-shadow calc(var(--turn-ms,820ms) * .3) linear}
+.leaf--turn .leaf__face{
+  box-shadow:0 1px 0 rgba(255,236,196,.3) inset;
+  transition-duration:calc(var(--turn-ms,820ms) * .1);
+}
+
+/* how much light a face loses as it turns away - opacity set by App.jsx.
+   z-index 7 clears every mark on the page; the face is a stacking context. */
+.dim{
+  position:absolute;inset:0;z-index:7;pointer-events:none;opacity:0;
+  background:#1c1206;
+}
+
+/* The shadow a sheet in the air throws onto the paper under it. One layer
+   per half, anchored at the spine, driven by App.jsx. The layer is the
+   sheet's footprint plus a penumbra, so only its far end shows past the
+   sheet - the weight has to be out there, not at the spine. Depth comes from
+   motion, not from here, because motion rewrites the whole transform string
+   and would drop a translateZ written in CSS. */
+.castshade{
+  position:absolute;top:0;height:100%;width:50%;
+  pointer-events:none;opacity:0;
+}
+.castshade--left{
+  left:0;transform-origin:right center;
+  background:linear-gradient(270deg,
+    rgba(10,6,2,.62), rgba(10,6,2,.5) 72%, transparent);
+}
+.castshade--right{
+  left:50%;transform-origin:left center;
+  background:linear-gradient(90deg,
+    rgba(10,6,2,.62), rgba(10,6,2,.5) 72%, transparent);
+}
+
+/* the spine, and the shadow it throws into the gutter */
+.spine{
+  position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;
+  transform:translateZ(2px);
+  background:linear-gradient(90deg, rgba(0,0,0,.42), rgba(0,0,0,.14) 45%, rgba(0,0,0,.42));
+}
+.gutter{
+  position:absolute;left:50%;top:0;bottom:0;
+  width:clamp(60px,9vw,130px);margin-left:calc(clamp(60px,9vw,130px) / -2);
+  transform:translateZ(1.6px);pointer-events:none;
+  background:linear-gradient(90deg,
+    transparent 0%, rgba(24,14,4,.22) 42%, rgba(24,14,4,.3) 50%,
+    rgba(24,14,4,.22) 58%, transparent 100%);
+  opacity:0;transition:opacity 500ms linear 260ms;
+}
+.book[data-open="true"] .gutter{opacity:1}
+
+/* ============================================================= BOOKMARKS
+   Three tabs poking out of the right edge, like the dividers in a real
+   file, plus a CLOSE tab that only exists while it is open. They ARE the
+   navigation - there is no bottom bar. Each one starts 26px UNDER the page
+   so it reads as attached rather than floating beside it. */
+.tabs{
+  position:absolute;left:100%;top:7%;
+  margin-left:-26px;
+  width:calc(var(--tabw) + 26px);
+  transform:translateZ(0px);
+  display:flex;flex-direction:column;gap:clamp(6px,1.2vh,12px);
+}
+.tab{
+  position:relative;
+  height:clamp(76px,14vh,128px);
+  padding:0;border:0;cursor:pointer;
+  border-radius:0 5px 5px 0;
+  background:linear-gradient(90deg, var(--kraft-dark) 0 26px, var(--kraft) 26px);
+  box-shadow:
+     0 1px 0 rgba(255,236,196,.26) inset,
+     0 0 0 1px var(--kraft-edge),
+     3px 3px 5px rgba(12,8,3,.4),
+     10px 16px 26px -12px rgba(8,5,2,.58);
+  display:flex;align-items:center;justify-content:flex-end;
+  transition:transform 200ms var(--ease-snap);
+}
+.tab__label{
+  writing-mode:vertical-rl;text-orientation:mixed;
+  font-family:var(--font-d);
+  font-size:clamp(10px,1.6vw,13px);letter-spacing:.16em;
+  color:var(--ink);
+  width:var(--tabw);height:100%;
+  display:flex;align-items:center;justify-content:center;
+}
+.tab:hover{transform:translateX(5px)}
+.tab:focus-visible{outline:2px solid var(--red-bright);outline-offset:3px}
+.tab[aria-current="page"]{
+  transform:translateX(7px);
+  background:linear-gradient(90deg, #b8975e 0 26px, var(--kraft-lit) 26px);
+}
+.tab[aria-current="page"]:hover{transform:translateX(12px)}
+.tab[aria-current="page"] .tab__label{color:var(--red)}
+.tab[aria-current="page"]::after{
+  content:'';position:absolute;left:2px;top:8px;bottom:8px;width:3px;
+  background:var(--red);opacity:.8;
+}
+.tab--close{height:clamp(58px,9vh,86px)}
+.tab--close .tab__label{color:var(--red)}
+
+/* The hint that the tabs open a shut file (App.jsx): each one is tugged out
+   past its rest, let go, and bounces once before it settles - front to back,
+   the way a thumb runs down a row of dividers. Never on a loop. */
+.tabs[data-nudge] .tab{
+  animation:tab-nudge var(--nudge-ms,900ms) cubic-bezier(.3,.7,.3,1) both;
+}
+.tabs[data-nudge] .tab:nth-child(2){animation-delay:calc(var(--nudge-ms,900ms) * .12)}
+.tabs[data-nudge] .tab:nth-child(3){animation-delay:calc(var(--nudge-ms,900ms) * .24)}
+@keyframes tab-nudge{
+  0%{transform:none}
+  24%{transform:translateX(13px)}
+  44%{transform:translateX(-2px)}
+  60%{transform:translateX(4px)}
+  76%,100%{transform:none}
+}
+
+/* ============================================================== THE SHEET
+   One page at a time. The sheet scrolls INSIDE the file if it has to.
+   The page behind it never does. */
+.sheet{
+  position:absolute;inset:0;
+  padding:clamp(18px,3.4vw,30px) clamp(16px,3vw,28px)
+          clamp(14px,2.6vw,22px) clamp(34px,5.4vw,50px);
+  display:flex;flex-direction:column;
+  color:var(--ink);
+  will-change:transform,opacity;
+}
+.sheet__scroll{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding-right:6px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(25,22,18,.35) transparent;
+  -webkit-mask-image:linear-gradient(180deg,#000 0, #000 calc(100% - 15px), transparent 100%);
+          mask-image:linear-gradient(180deg,#000 0, #000 calc(100% - 15px), transparent 100%);
+}
+.sheet__scroll::-webkit-scrollbar{width:7px}
+.sheet__scroll::-webkit-scrollbar-thumb{background:rgba(25,22,18,.32);border-radius:9px}
+.sheet__scroll::-webkit-scrollbar-track{background:transparent}
+
+/* -------------------------------------------------------------- the head */
+.head{display:flex;justify-content:space-between;align-items:flex-start;
+      gap:10px;margin-bottom:clamp(8px,1.4vw,14px);flex:none}
+.stamp-ts{width:clamp(62px,13vw,88px);height:auto;flex:none;
+          transform:rotate(-8deg);opacity:.9}
+/* A scrap torn off a sheet on all four sides and taped to the kraft. The rag
+   is a clip-path, so the shadow has to be a drop-shadow filter — box-shadow
+   would draw the un-torn rectangle. A filter is safe here only because this
+   sits inside .leaf__face, which is already a flattening boundary; never
+   move one up into the 3D chain.
+   The wrapper exists to hold the tape: it is the UNROTATED box, so the two
+   pieces can sit over opposite corners of a scrap that is itself tilted. */
+.confidential{
+  position:relative;display:inline-block;
+  align-self:flex-start;flex:none;
+}
+.confidential__scrap{
+  position:relative;display:inline-block;
+  font-family:var(--font-d);font-size:clamp(11px,2.3vw,15px);
+  letter-spacing:.1em;color:var(--red);white-space:nowrap;
+  background:linear-gradient(150deg,#f6efdd 0%,#e9dec2 58%,#ded0ae 100%);
+  clip-path:polygon(
+    2% 14%, 9% 5%, 17% 13%, 26% 4%, 35% 12%, 44% 4%, 53% 13%,
+    62% 4%, 71% 12%, 80% 5%, 88% 13%, 96% 5%, 99% 16%,
+    97% 30%, 100% 48%, 97% 66%, 99% 84%,
+    93% 96%, 85% 87%, 76% 97%, 67% 88%, 58% 96%, 49% 87%,
+    40% 97%, 31% 88%, 22% 96%, 13% 87%, 5% 95%, 1% 82%,
+    3% 64%, 0% 47%, 3% 30%
+  );
+  filter:drop-shadow(1.5px 3px 2px rgba(18,11,3,.5));
+  transform:rotate(-2.2deg);
+}
+/* the raw fibre the tear leaves along the two long edges */
+.confidential__scrap::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(to bottom, rgba(122,92,44,.28) 0 .13em, transparent .13em),
+    linear-gradient(to top,    rgba(122,92,44,.22) 0 .12em, transparent .12em);
+}
+.confidential__tape{
+  position:absolute;z-index:2;width:3.4em;height:1.25em;pointer-events:none;
+  background:linear-gradient(100deg,rgba(240,234,212,.55),rgba(212,204,176,.6));
+  border-left:1px solid rgba(255,255,255,.42);
+  border-right:1px solid rgba(255,255,255,.42);
+  box-shadow:0 1px 2px rgba(18,11,3,.28);
+}
+.confidential__tape--tl{left:-.9em;top:-.5em;transform:rotate(-38deg)}
+.confidential__tape--br{right:-.9em;bottom:-.5em;transform:rotate(-38deg)}
+
+/* ------------------------------------------------------------ ruled lines */
+.rule{display:flex;gap:9px;align-items:baseline;
+      border-bottom:1px solid rgba(25,22,18,.3);
+      padding-bottom:2px;margin-bottom:7px;flex:none}
+.rule__k{font-family:var(--font-d);font-size:clamp(9px,1.9vw,11px);
+         letter-spacing:.13em;color:var(--ink-2);flex:none;width:5.6em}
+.rule__v{font-family:var(--font-d);font-size:clamp(17px,4.4vw,27px);
+         letter-spacing:.03em;color:var(--ink);margin:0;line-height:1.18}
+
+/* -------------------------------------------------------- the photo block
+   Your face, front and centre. The bar over the eyes slides off on hover,
+   on tap, and on keyboard focus. */
+.photo-row{display:flex;gap:clamp(10px,2.4vw,18px);align-items:flex-start;
+           margin:clamp(8px,1.6vw,13px) 0;flex:none}
+.photo{
+  position:relative;flex:none;
+  width:clamp(112px,30vw,146px);aspect-ratio:1/1;
+  padding:7px 7px 26px;background:#efe9dc;
+  transform:rotate(-2.2deg);
+  box-shadow:0 2px 4px rgba(12,8,3,.42), 0 12px 22px -10px rgba(10,6,2,.6);
+  transition:transform 220ms var(--ease-snap);
+}
+.photo:hover{transform:rotate(-2.2deg) scale(1.035)}
+/* The raw photo is a wide shot: his head occupies roughly x 33-55%,
+   y 18-48%. Cropping to the face is the whole reason this frame exists —
+   at 1:1 with plain object-fit the face came out tiny. scale 1.45 about
+   (45%, 42%) shows x 14-83%, y 13-82% of the source: full head, shoulders,
+   a little air. */
+.photo__frame{
+  position:relative;display:block;width:100%;height:100%;overflow:hidden;
+  background:#2a2a2c;
+}
+.photo__img{
+  display:block;width:100%;height:100%;object-fit:cover;
+  transform:scale(1.45);
+  transform-origin:45% 42%;
+  filter:grayscale(.6) contrast(1.16) sepia(.14) brightness(1.05);
+}
+/* the staple */
+.photo::before{
+  content:'';position:absolute;left:50%;top:-5px;width:26px;height:9px;
+  margin-left:-13px;border-radius:2px;z-index:3;
+  background:linear-gradient(180deg,#cdd2d7,#7d848b 60%,#4c5258);
+  box-shadow:0 2px 4px rgba(0,0,0,.5);
+}
+/* Sits on the eye line of the CROPPED view (source y 31-35% lands at
+   24-33% of the frame). Pure black with a lifted edge so it reads as a
+   marker stripe laid on top, not as part of a dark photo. */
+.photo__bar{
+  position:absolute;left:-2%;right:-2%;top:24%;height:11.5%;
+  background:#0a0908;
+  box-shadow:0 1px 0 rgba(255,255,255,.14) inset,
+             0 3px 7px rgba(0,0,0,.55);
+  transform-origin:left center;
+  transform:scaleX(1);
+  transition:transform 420ms var(--ease-out);
+  pointer-events:none;
+}
+.photo:hover .photo__bar{transform:scaleX(0)}
+.photo__cap{
+  position:absolute;left:0;right:0;bottom:6px;
+  font-family:var(--font-d);font-size:10px;letter-spacing:.1em;
+  color:#3a3229;text-align:center;
+}
+
+.photo-side{flex:1;min-width:0}
+
+
+/* ------------------------------------------------------- the overflow hint
+   Without this, a scroll region that is cut off just reads as dead space —
+   which is exactly how the contents list went missing on a short screen. */
+.scrollbox{position:relative;flex:1;min-height:0;display:flex}
+.scrollbox > .sheet__scroll{flex:1}
+.scrollbox::after{
+  content:'▾ MORE BELOW';
+  position:absolute;left:0;right:0;bottom:-3px;text-align:center;
+  font-family:var(--font-d);font-size:10px;letter-spacing:.16em;
+  color:var(--red);
+  background:linear-gradient(180deg,transparent,rgba(201,172,118,.96) 62%);
+  padding:14px 0 3px;pointer-events:none;
+  opacity:0;transition:opacity 200ms linear;
+}
+.scrollbox[data-more='true']::after{opacity:1}
+.scrollbox[data-end='true']::after{opacity:0}
+
+/* ------------------------------------------------------------ the summary */
+.summary{position:relative;border:1px solid rgba(122,26,16,.44);
+         padding:clamp(10px,2vw,15px);margin:clamp(8px,1.6vw,14px) 0 0}
+.summary::before{
+  content:'SUMMARY';position:absolute;top:-.66em;left:11px;padding:0 6px;
+  background:var(--kraft);
+  font-family:var(--font-d);font-size:clamp(9px,1.9vw,11px);
+  letter-spacing:.17em;color:var(--red);
+}
+.summary p{margin:0;font-size:clamp(12.5px,1.5vw,15.5px);line-height:1.5;
+           color:var(--ink);text-wrap:pretty}
+/* With profile.intro gone from the cover, the Assessment is the only prose
+   representing him there, so it takes the page's strongest slot — and the red
+   border is the anchor the rest of the cover was composed against. */
+.summary--assess::before{content:'ASSESSMENT'}
+.summary__disp{
+  margin:.55em 0 0;padding-top:.45em;
+  border-top:1px solid rgba(122,26,16,.3);
+  font-family:var(--font-d);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--red);
+}
+
+/* -------------------------------------------------------------- the foot */
+.foot{margin-top:auto;padding-top:10px;flex:none;
+      display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.stamp-classified{
+  font-family:var(--font-d);font-size:clamp(13px,3.1vw,20px);
+  letter-spacing:.26em;color:var(--red-soft);
+  border:3px solid var(--red-soft);padding:3px 11px;
+  opacity:.78;transform:rotate(-7deg);
+}
+.file-no{font-family:var(--font-d);font-size:clamp(9px,1.9vw,11px);
+         letter-spacing:.12em;color:var(--ink-2)}
+/* Deliberately NOT a stamp. The cover already carries TOP SECRET, the red
+   summary box and the taped scrap; a fourth red mark in the corner made the
+   foot fight itself. Registry data, set to match .file-no across the spine. */
+.verified{text-align:right;font-family:var(--font-d);
+          font-size:clamp(9px,1.9vw,11px);letter-spacing:.12em;
+          line-height:1.5;color:var(--ink-2)}
+.verified__k{display:block;color:var(--red);letter-spacing:.2em}
+/* The cover foot carries three registers, not two. Equal thirds, because
+   space-between would only wedge the middle one between its neighbours -
+   it would not sit on the centre of the paper. */
+.foot--cover>*{flex:1}
+.file-no--mid{text-align:center}
+
+/* ================================================== inner page typography */
+.page-title{
+  font-family:var(--font-d);font-size:clamp(16px,2.1vw,25px);
+  letter-spacing:.04em;color:var(--ink);margin:0 0 3px;line-height:1.2;
+}
+.page-kicker{
+  font-family:var(--font-d);font-size:clamp(9px,1.1vw,11px);
+  letter-spacing:.16em;color:var(--red);margin:0 0 10px;
+}
+.divider{border:0;border-top:1px solid rgba(25,22,18,.26);margin:9px 0}
+.body-text{font-size:clamp(12px,1.42vw,14.5px);line-height:1.56;
+           color:var(--ink);margin:0 0 9px}
+.label{
+  font-family:var(--font-d);font-size:clamp(9px,1.05vw,11px);
+  letter-spacing:.15em;color:var(--ink-2);margin:11px 0 4px;display:block;
+}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 4px;padding:0;list-style:none}
+.chips li{
+  font-family:var(--font-d);font-size:clamp(9px,1.05vw,11px);letter-spacing:.08em;
+  color:var(--ink);border:1px solid rgba(25,22,18,.36);
+  padding:2px 8px;background:rgba(255,246,224,.32);
+}
+.bullets{margin:0;padding-left:0;list-style:none}
+.bullets li{position:relative;padding-left:17px;margin-bottom:8px;
+            font-size:clamp(11.5px,1.34vw,14px);line-height:1.5;color:var(--ink)}
+.bullets li::before{content:'\25B8';position:absolute;left:2px;top:0;color:var(--red)}
+.linkout{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--font-d);font-size:clamp(10px,2.1vw,13px);letter-spacing:.09em;
+  color:var(--red);text-decoration:none;
+  border-bottom:1px solid rgba(122,26,16,.45);padding-bottom:1px;
+}
+.linkout:hover,.linkout:focus-visible{color:var(--red-soft);
+  border-bottom-color:var(--red-soft);outline:none}
+.linkout:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+
+/* ================================================================ the index
+   WORK — three case cards, tap one to open it. */
+.case-list{display:flex;flex-direction:column;gap:clamp(8px,1.4vh,16px);
+           margin:0;padding:0;list-style:none}
+.case-card{
+  min-height:clamp(64px,9vh,104px);
+  width:100%;text-align:left;cursor:pointer;
+  display:flex;gap:11px;align-items:stretch;
+  background:rgba(255,247,227,.4);
+  border:1px solid rgba(25,22,18,.28);
+  padding:10px 11px;
+  transition:background 160ms linear, transform 160ms var(--ease-snap);
+}
+.case-card:hover{background:rgba(255,250,236,.72);transform:translateX(3px)}
+.case-card:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.case-card__no{font-family:var(--font-d);font-size:clamp(15px,3.4vw,21px);
+               color:var(--red);line-height:1;flex:none;padding-top:1px}
+.case-card__name{font-family:var(--font-d);font-size:clamp(12px,2.7vw,15px);
+                 letter-spacing:.03em;color:var(--ink);display:block;margin-bottom:2px}
+.case-card__tag{font-size:clamp(11px,2.4vw,13px);line-height:1.45;
+                color:var(--ink-2);display:block}
+
+/* =================================================================== FORM */
+.field{margin-bottom:9px}
+.field label{
+  display:block;font-family:var(--font-d);
+  font-size:clamp(9px,1.9vw,11px);letter-spacing:.14em;
+  color:var(--ink-2);margin-bottom:3px;
+}
+.field input,.field textarea{
+  width:100%;font:inherit;font-size:clamp(12.5px,2.7vw,15px);color:var(--ink);
+  background:rgba(255,250,236,.62);
+  border:0;border-bottom:1.5px solid rgba(25,22,18,.42);
+  padding:6px 8px;border-radius:2px 2px 0 0;
+  transition:background 140ms linear, border-color 140ms linear;
+}
+/* What the field wants, said beside its label rather than under it - the row
+   under a field belongs to the error and must stay empty until there is one.
+   Plain typewriter, no tracking, so it reads as an aside and not as a second
+   label. --ink-2 is the lightest ink that still clears 4.5:1 on kraft. */
+.hint{
+  font-family:var(--font-b);letter-spacing:0;text-transform:none;
+  color:var(--ink-2);font-size:.92em;
+}
+.field textarea{resize:none;min-height:clamp(70px,12vh,120px);line-height:1.5}
+.field input:focus,.field textarea:focus{
+  outline:none;background:rgba(255,252,244,.94);border-bottom-color:var(--red);
+}
+/* A field that is being complained about looks complained-about, so the
+   message under it is not the only signal. */
+.field input[aria-invalid='true'],.field textarea[aria-invalid='true']{
+  border-bottom-color:var(--red);background:rgba(255,238,230,.72);
+}
+.field .err{display:block;color:var(--red);font-size:11px;margin-top:3px;min-height:14px}
+.hp{display:none}
+.form-status{
+  font-family:var(--font-d);font-size:clamp(10px,2.1vw,12px);letter-spacing:.09em;
+  margin:8px 0 0;min-height:1.4em;
+}
+.form-status[data-tone='ok']{color:var(--green)}
+.form-status[data-tone='bad']{color:var(--red)}
+
+/* the socials */
+.socials{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0;padding:0;list-style:none}
+.socials a{
+  display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 11px;
+  font-family:var(--font-d);font-size:clamp(9.5px,2vw,12px);letter-spacing:.1em;
+  color:var(--ink);text-decoration:none;
+  border:1px solid rgba(25,22,18,.32);background:rgba(255,247,227,.42);
+}
+.socials a:hover{background:rgba(255,251,238,.8)}
+.socials a:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+/* ---------------------------------------------------------- skip + a11y */
+.skip{position:absolute;left:-9999px;top:0;z-index:99}
+.skip:focus{left:10px;top:10px;padding:10px 14px;background:var(--paper);
+            color:var(--ink);text-decoration:none;font-family:var(--font-d)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------------------------------------------------------- mobile note
+   Shown on touch-first screens until mobile is built. A paper slip over
+   the desk, not a banner. */
+.mobile-note{
+  position:fixed;inset:0;z-index:100;
+  display:grid;place-items:center;padding:24px;
+  background:rgba(8,6,5,.86);
+}
+.mobile-note__slip{
+  max-width:340px;padding:22px 20px 18px;
+  background:var(--paper);color:var(--ink);
+  box-shadow:0 14px 40px rgba(0,0,0,.6);
+  transform:rotate(-1.2deg);
+  font:15px/1.55 var(--font-b);text-align:center;
+}
+.mobile-note__slip p{margin:0 0 16px}
+.mobile-note__slip button{
+  font-family:var(--font-d);letter-spacing:.12em;text-transform:uppercase;
+  font-size:12px;padding:9px 16px;cursor:pointer;
+  background:transparent;color:var(--red);border:2px solid var(--red);
+}
+
+/* -------------------------------------------------------- short screens */
+/* Short windows: shrink the furniture before the content. */
+@media (max-height:760px){
+  :root{--gap:clamp(10px,2vw,18px)}
+  .stamp-ts{width:clamp(52px,10vw,68px)}
+  .head{margin-bottom:6px}
+  .rule{margin-bottom:5px}
+  .photo{width:clamp(96px,24vw,124px)}
+  .photo-row{margin:6px 0}
+  .summary{padding:9px 11px}
+  .foot{padding-top:6px}
+}
+@media (max-height:600px){
+  :root{--bar:64px}
+  .rule__v{font-size:clamp(15px,3.4vw,20px)}
+  .stamp-classified{font-size:clamp(11px,2.4vw,15px);padding:2px 8px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ------------------------------------------------- paging, on the paper
+   The bottom bar is gone, so prev/next lives at the foot of the case. */
+.paging{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin:18px 0 4px;padding-top:10px;
+  border-top:1px solid rgba(25,22,18,.26);
+}
+.paging__btn{
+  border:1px solid rgba(25,22,18,.34);background:rgba(255,247,227,.4);
+  font-family:var(--font-d);font-size:clamp(9.5px,1.4vw,12px);letter-spacing:.1em;
+  color:var(--ink);padding:7px 11px;min-height:38px;cursor:pointer;
+  transition:background 140ms linear;
+}
+.paging__btn:hover{background:rgba(255,251,238,.8)}
+.paging__btn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.paging__count{
+  font-family:var(--font-d);font-size:clamp(9.5px,1.4vw,12px);
+  letter-spacing:.14em;color:var(--ink-2);
+}
+
+/* the send button now lives inside the form */
+.ping{
+  width:100%;min-height:46px;margin-top:6px;cursor:pointer;
+  background:var(--red);border:1px solid var(--red-soft);color:#fff2ec;
+  font-family:var(--font-d);font-size:clamp(11px,1.7vw,14px);letter-spacing:.16em;
+  transition:background 140ms linear;
+}
+.ping:hover{background:var(--red-soft)}
+.ping:disabled{opacity:.6;cursor:progress}
+.ping:focus-visible{outline:2px solid var(--red-bright);outline-offset:3px}
+
+/* ------------------------------------------------- the subject card bits */
+.rule__v--sm{font-size:clamp(13px,1.7vw,19px)}
+.photo--left{align-self:flex-start;margin:2px 0 12px}
+.summary--left{margin:0 0 4px}
+.socials--tight a{min-height:32px;padding:0 9px;font-size:clamp(9px,1.3vw,11px)}
+.card__mid{padding-right:4px}
+
+/* the enclosures list on the subject card */
+.contents__list{list-style:none;margin:0 0 4px;padding:0}
+.contents__list li{
+  display:flex;align-items:baseline;gap:8px;
+  padding:3px 0;border-bottom:1px dotted rgba(25,22,18,.26);
+}
+.contents__no{
+  font-family:var(--font-d);font-size:clamp(10px,1.5vw,13px);
+  color:var(--red);flex:none;letter-spacing:.04em;
+}
+.contents__name{
+  font-size:clamp(10.5px,1.5vw,13px);color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.contents__dots{flex:1;min-width:8px;
+  border-bottom:1px dotted rgba(25,22,18,.34);transform:translateY(-3px)}
+.contents__st{
+  font-family:var(--font-d);font-size:clamp(8.5px,1.2vw,10px);
+  letter-spacing:.1em;color:var(--ink-2);flex:none;
+}
+
+
+/* ======================================================= SPREAD FURNITURE */
+
+.phead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex:none}
+.phead__txt{min-width:0}
+
+.tagline{
+  font-style:italic;font-size:clamp(12px,1.5vw,15px);line-height:1.5;
+  color:var(--ink-2);margin:0 0 4px;
+}
+.body-text--tight{font-size:clamp(11.5px,1.32vw,13.5px);line-height:1.5;margin-bottom:8px}
+
+/* --------------------------------------------------- RESUME right: the ask */
+.dl{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:clamp(10px,1.8vh,20px) 0 clamp(8px,1.4vh,14px);
+}
+.dl__doc{
+  position:relative;display:block;
+  width:clamp(96px,11vw,132px);aspect-ratio:1/1.32;
+  background:#f4efe1;border:1px solid rgba(25,22,18,.3);
+  box-shadow:0 2px 4px rgba(12,8,3,.35), 0 14px 26px -12px rgba(10,6,2,.6);
+  padding:14px 12px;margin-bottom:12px;
+  transform:rotate(-2deg);
+}
+.dl__corner{
+  position:absolute;right:-1px;top:-1px;width:22px;height:22px;
+  background:linear-gradient(225deg, var(--kraft) 50%, rgba(25,22,18,.22) 50%);
+  border-left:1px solid rgba(25,22,18,.24);
+  border-bottom:1px solid rgba(25,22,18,.24);
+}
+.dl__line{
+  display:block;height:3px;margin:0 0 7px;border-radius:1px;
+  background:rgba(25,22,18,.2);
+}
+.dl__line--short{width:58%}
+.dl__badge{
+  position:absolute;left:50%;bottom:10px;transform:translateX(-50%) rotate(-6deg);
+  font-family:var(--font-d);font-size:12px;letter-spacing:.18em;
+  color:var(--red);border:2px solid var(--red);padding:1px 7px;opacity:.85;
+}
+.dl__name{
+  margin:0;font-size:clamp(12px,1.4vw,15px);color:var(--ink);
+  overflow-wrap:anywhere;
+}
+.dl__sub{
+  margin:2px 0 12px;font-family:var(--font-d);
+  font-size:clamp(9px,1.1vw,11px);letter-spacing:.1em;color:var(--ink-2);
+}
+
+/* --------------------------------------------------- WORK right: the index */
+.case-card__body{min-width:0;flex:1}
+.case-card__tech{
+  display:block;margin-top:3px;font-family:var(--font-d);
+  font-size:clamp(8.5px,1vw,10px);letter-spacing:.08em;color:var(--ink-2);
+}
+.case-card__go{
+  align-self:center;font-size:20px;color:var(--red);flex:none;padding-left:4px;
+}
+
+/* --------------------------------------------------- CONTACT left: the send */
+.ping--big{
+  margin-top:14px;min-height:clamp(52px,7vh,68px);
+  font-size:clamp(13px,1.7vw,17px);letter-spacing:.2em;
+  box-shadow:0 3px 0 #5a120a, 0 10px 22px -10px rgba(0,0,0,.7);
+}
+.ping--big:active{transform:translateY(2px);box-shadow:0 1px 0 #5a120a}
+.ping--link{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:auto;padding:0 clamp(16px,2.4vw,30px);min-height:52px;
+  text-decoration:none;letter-spacing:.18em;
+}
+
+/* ------------------------------------------------------------- misc bits */
+.photo--sm{width:clamp(84px,8.4vw,116px)}
+.stamp-classified--ok{color:var(--green);border-color:var(--green)}
+.socials--tight a{min-height:32px;padding:0 9px;font-size:clamp(9px,1.3vw,11px)}
+
+
+/* ==================================================== THE TYPE SCALE
+   One knob. Everything on a page is em, and the em is a fraction of the
+   PAGE width - not of the window. The page is sized by whichever of height
+   or width runs out first, so a vw-based scale kept the type big while the
+   paper shrank, and the content spilled off a short window. This cannot. */
+.page{
+  font-size:max(10.4px, calc(var(--page-w) * 0.0275));
+  padding:1.55em 1.5em 1.1em 2em;
+}
+.page--left{padding:1.55em 2em 1.1em 1.5em}
+
+.page-kicker{font-size:.78em;letter-spacing:.16em;margin:0 0 .25em}
+.page-title{font-size:1.78em;letter-spacing:.03em;margin:0 0 .1em;line-height:1.16}
+.divider{margin:.62em 0}
+.label{font-size:.76em;letter-spacing:.15em;margin:.85em 0 .3em}
+.body-text{font-size:1em;line-height:1.56;margin:0 0 .6em}
+.body-text--tight{font-size:.94em;line-height:1.5;margin:0 0 .55em}
+.tagline{font-size:1.02em;line-height:1.45;margin:0 0 .3em}
+.summary{padding:.72em .82em;margin:.5em 0 0}
+.summary::before{font-size:.76em;letter-spacing:.17em}
+.summary p{font-size:1.06em;line-height:1.5}
+.summary__disp{font-size:.8em}
+.chips{gap:.36em}
+.chips li{font-size:.76em;padding:.14em .55em;letter-spacing:.07em}
+.bullets li{font-size:.96em;line-height:1.5;margin-bottom:.55em;padding-left:1.2em}
+.linkout{font-size:.86em;letter-spacing:.09em}
+.rule{margin-bottom:.42em;padding-bottom:.14em;gap:.6em}
+.rule__k{font-size:.76em;width:5.6em}
+.rule__v{font-size:1.78em;line-height:1.16}
+.foot{padding-top:.6em}
+.file-no{font-size:.76em;letter-spacing:.12em}
+.stamp-classified{font-size:1.15em;letter-spacing:.24em;padding:.15em .6em;border-width:2px}
+.confidential{font-size:1em;margin:.85em 0 .15em}
+.confidential__scrap{font-size:1em;letter-spacing:.09em;padding:.8em 1.35em .82em}
+.verified{font-size:.76em;letter-spacing:.12em}
+.head{margin-bottom:.6em}
+.stamp-ts{width:calc(var(--page-w) * .16)}
+.photo{width:calc(var(--page-w) * .32);padding:.5em .5em 1.7em}
+.photo--sm{width:calc(var(--page-w) * .23)}
+.photo__cap{font-size:.7em;bottom:.42em}
+.photo-row{gap:.9em;margin:.6em 0}
+
+/* the Stanford appointment
+   The seal is floated with a circular shape-outside so the prose hugs its rim
+   instead of paying for a whole column, and it is pulled into the page's own
+   right margin so the ink runs off the edge of the type block the way a real
+   stamp does. The tilt is a transform, so it never disturbs that wrap. */
+.credit{position:relative}
+.credit .label{margin-top:.7em}
+.seal-su{
+  float:right;display:block;
+  width:calc(var(--page-w) * .33);height:auto;
+  margin:-1.1em -1.2em .1em .5em;
+  transform:rotate(-4.5deg);
+  shape-outside:circle(50%);
+  shape-margin:.3em;
+}
+.credit__org{
+  font-family:var(--font-d);font-size:.94em;letter-spacing:.05em;
+  color:var(--red);margin:0 0 .3em;line-height:1.25;
+}
+.credit__note{font-size:.9em;line-height:1.48;color:var(--ink);margin:0;
+              text-wrap:pretty}
+
+/* the case index */
+.case-list{gap:.62em}
+.case-card{min-height:0;padding:.62em .7em;gap:.7em}
+.case-card__no{font-size:1.5em}
+.case-card__name{font-size:1.02em;margin-bottom:.12em}
+.case-card__tag{font-size:.9em;line-height:1.4}
+.case-card__tech{font-size:.72em;margin-top:.2em}
+.case-card__go{font-size:1.5em}
+
+/* the form */
+.field{margin-bottom:.55em}
+.field label{font-size:.76em;letter-spacing:.14em;margin-bottom:.16em}
+.field input,.field textarea{font-size:.96em;padding:.4em .5em}
+.field textarea{min-height:6.4em}
+.field .err{font-size:.76em;min-height:1.1em;margin-top:.1em}
+.form-status{font-size:.84em;letter-spacing:.08em;margin:.5em 0 0}
+.socials{gap:.4em;margin:.5em 0 0}
+.socials a{min-height:2.5em;padding:0 .7em;font-size:.78em;letter-spacing:.09em}
+.ping{min-height:3.1em;font-size:.95em;letter-spacing:.16em;margin-top:.4em}
+.ping--big{min-height:3.9em;font-size:1.15em;letter-spacing:.2em;margin-top:.9em}
+.ping--link{min-height:3.4em;padding:0 1.6em;font-size:1em}
+
+/* the download panel */
+.dl{padding:.6em 0 .5em}
+.dl__doc{width:calc(var(--page-w) * .21);margin-bottom:.8em;padding:1em .9em}
+.dl__line{height:.22em;margin-bottom:.5em}
+.dl__badge{font-size:.82em;padding:.06em .5em;bottom:.7em}
+.dl__name{font-size:1em}
+.dl__sub{font-size:.76em;margin:.15em 0 .9em}
+
+/* the paging */
+.paging{margin:.9em 0 .2em;padding-top:.6em}
+.paging__btn{font-size:.78em;padding:.5em .75em;min-height:0}
+.paging__count{font-size:.78em}
+
+/* the case index should fill its page, not huddle at the top */
+.case-list{justify-content:flex-start;gap:1.05em}
+.case-card{padding:.9em .85em}
+.case-card__tag{margin-top:.15em}
+
+
+/* ------------------------------------------------- filling the page
+   A page whose content stops two thirds down reads as unfinished. One
+   block per page is pushed to the foot, which splits the slack instead of
+   dumping it all at the bottom. */
+.push{margin-top:auto}
+.dl{flex:1;justify-content:center;padding:0}
+.paging{margin-top:auto}
+.paging + .foot{margin-top:0}
+
+/* the message field takes whatever room is left on the slip */
+.page--right form{display:flex;flex-direction:column;flex:1;min-height:0}
+.page--right form .field:last-of-type{display:flex;flex-direction:column;flex:1;min-height:0}
+.page--right form .field:last-of-type textarea{flex:1}
+
+.case-card{min-height:4.6em;align-items:center}
+
+/* the big count on the index's left page */
+.bignum{margin:0;font-family:var(--font-d);font-size:.8em;
+        letter-spacing:.16em;color:var(--ink-2)}
+.bignum span{display:block;font-size:4.2em;line-height:1;
+             color:var(--red);margin-bottom:.06em}
+
+
+/* ==================================================================== A5
+   THE ENVELOPE
+
+   Pressing Ping me does not print a sentence. The slip lifts off the page,
+   folds itself in three, a kraft skin resolves over the stack, and a stamp
+   slams onto it. The geometry is real 3D: this is its own perspective root,
+   because `.page` carries overflow:hidden and is therefore already a
+   flattening boundary - the folder's perspective was never going to reach in
+   here, and nothing in here can reach back out and flatten the folder. */
+
+/* the form and the envelope share one box, so the envelope lands exactly
+   where the slip was */
+.slipwrap{position:relative;display:flex;flex-direction:column;flex:1;min-height:0}
+.slipwrap form{transition:opacity 180ms linear}
+.slipwrap form[inert]{opacity:0}
+
+.env-stage{
+  position:absolute;inset:0;z-index:4;
+  perspective:calc(var(--page-w) * 1.7);
+  perspective-origin:50% 40%;
+  pointer-events:none;
+}
+/* The sheet stops short of the foot of the page, so the folded envelope
+   lands above centre and the counterfoil has somewhere to be. */
+.env{
+  position:absolute;left:3%;right:3%;top:0;bottom:18%;
+  transform-style:preserve-3d;
+}
+
+/* --- one third of the sheet ------------------------------------------- */
+.env__panel{
+  position:absolute;left:0;width:100%;height:33.34%;
+  transform-style:preserve-3d;
+}
+.env__panel--top{top:0}
+.env__panel--mid{top:33.33%}
+.env__panel--bot{top:66.66%}
+
+/* Outer element carries the depth, inner hinge carries the rotation - the
+   same split the leaves use. The crease is the shared edge, never the
+   panel's own centre. */
+.env__hinge{position:absolute;inset:0;transform-style:preserve-3d}
+.env__panel--top .env__hinge{transform-origin:center bottom}
+.env__panel--bot .env__hinge{transform-origin:center top}
+
+/* Every panel needs a real verso. A face with backface-visibility:hidden
+   that rotates 180 degrees turns its back to you and disappears. */
+.env__face{
+  position:absolute;inset:0;overflow:hidden;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  transform:rotateX(0deg);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E"),
+    linear-gradient(172deg, #fbf6ea 0%, var(--paper) 46%, var(--paper-2) 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.5) inset,
+             2px 5px 14px -6px rgba(20,12,4,.55);
+}
+.env__face--verso{
+  transform:rotateX(180deg);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E"),
+    /* the typed side, faintly showing through the paper */
+    repeating-linear-gradient(180deg, rgba(25,22,18,.05) 0 1px, transparent 1px 1.1em),
+    linear-gradient(172deg, var(--paper-2) 0%, #ded3ba 100%);
+}
+/* the crease itself: a hard fold catches light on one side and shade on the
+   other, and it is the only reason the fold reads as paper and not as a flap */
+.env__panel--top .env__face--recto{box-shadow:inset 0 -.5em .7em -.5em rgba(20,12,4,.3)}
+.env__panel--bot .env__face--recto{box-shadow:inset 0 .5em .7em -.5em rgba(20,12,4,.3)}
+
+/* Each panel is a WINDOW onto a full-height copy of the letter, slid up by
+   its own share. The three read as one continuous page, so the creases fall
+   between real lines of real text. */
+.env__win{position:absolute;left:0;width:100%;height:300%}
+.env__win[data-part='mid']{top:-100%}
+.env__win[data-part='bot']{top:-200%}
+
+.env__sheet{
+  position:absolute;inset:0;
+  padding:1.5em 1.6em;color:var(--ink);
+  display:flex;flex-direction:column;
+}
+.env__slug{
+  margin:0;font-family:var(--font-d);font-size:.74em;letter-spacing:.18em;
+  color:var(--red);text-transform:uppercase;
+}
+.env__hr{border:0;border-top:1px solid rgba(25,22,18,.3);margin:.5em 0 .7em}
+.env__kv{
+  margin:0 0 .3em;font-size:.82em;line-height:1.45;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.env__kv span{
+  display:inline-block;width:7em;padding-right:.6em;
+  font-family:var(--font-d);font-size:.88em;letter-spacing:.13em;
+  color:var(--ink-2);text-transform:uppercase;
+}
+.env__msg{
+  margin:.7em 0 0;font-size:.86em;line-height:1.62;white-space:pre-wrap;
+  overflow:hidden;
+}
+.env__sign{
+  margin-top:auto;padding-top:.6em;
+  font-family:var(--font-d);font-size:.72em;letter-spacing:.13em;
+  color:var(--ink-2);text-transform:uppercase;
+}
+
+/* --- the kraft skin ---------------------------------------------------- */
+/* depth here, animation on the child - see the note in pages.jsx */
+.env__skinbox{
+  position:absolute;left:-2.5%;right:-2.5%;top:28.5%;height:43%;
+  transform:translateZ(4px);transform-style:preserve-3d;
+}
+.env__skin{
+  position:absolute;inset:0;
+  padding:1.05em 1.15em;
+  border:1px solid rgba(56,38,12,.52);border-radius:2px;
+  /* a shade deeper than the page, or the envelope is a rectangle of nothing
+     lying on paper of exactly its own colour */
+  background-color:var(--kraft-dark);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23f)' opacity='.34'/%3E%3C/svg%3E"),
+    linear-gradient(168deg, var(--kraft) 0%, var(--kraft-dark) 56%, #997c4c 100%);
+  box-shadow:
+    0 1px 0 rgba(255,240,208,.4) inset,
+    0 .5em 1.4em -.5em rgba(14,9,3,.75),
+    0 1.4em 3em -1em rgba(14,9,3,.6);
+}
+/* the back flap, showing through from the other side. One line, because on
+   the front of an envelope that is all you actually see of it. */
+.env__seam{
+  position:absolute;left:0;right:0;top:33%;height:1px;
+  background:rgba(60,42,16,.22);
+  box-shadow:0 1px 0 rgba(255,242,214,.28);
+}
+/* sender, top left, small */
+.env__ret{
+  position:absolute;top:1.05em;left:1.15em;max-width:46%;
+  display:flex;flex-direction:column;
+  font-family:var(--font-d);font-size:.74em;line-height:1.55;
+  letter-spacing:.09em;color:var(--ink-2);
+}
+.env__ret span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.env__ret-k{color:var(--red);letter-spacing:.2em;text-transform:uppercase}
+.env__ret-d{opacity:.85}
+
+/* recipient, lower centre, large - this is the line a postman reads */
+.env__addr{position:absolute;left:27%;right:6%;bottom:1.15em}
+.env__addr-k{
+  margin:0;font-family:var(--font-d);font-size:.72em;letter-spacing:.22em;
+  color:var(--ink-2);text-transform:uppercase;
+}
+.env__addr-n{
+  margin:.06em 0 0;font-family:var(--font-d);font-size:1.65em;
+  letter-spacing:.05em;line-height:1.1;color:var(--ink);
+}
+.env__addr-s{
+  margin:.2em 0 0;font-size:.8em;letter-spacing:.05em;color:var(--ink-2);
+}
+
+/* --- the counterfoil --------------------------------------------------- */
+.stub{
+  position:absolute;left:6%;right:6%;bottom:0;z-index:3;
+  padding:.7em .9em .6em;
+  border:1px solid rgba(25,22,18,.24);
+  border-top:1px dashed rgba(25,22,18,.4);   /* the torn perforation */
+  background-image:
+    linear-gradient(174deg, rgba(250,245,232,.96), rgba(226,217,196,.94));
+  box-shadow:0 .4em 1em -.45em rgba(14,9,3,.6);
+}
+.stub__k{
+  display:block;font-family:var(--font-d);font-size:.7em;letter-spacing:.2em;
+  color:var(--red);text-transform:uppercase;
+}
+.stub__msg{
+  margin:.3em 0 .35em;font-size:.8em;line-height:1.45;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.stub__f{
+  display:block;font-family:var(--font-d);font-size:.68em;letter-spacing:.14em;
+  color:var(--ink-2);text-transform:uppercase;
+}
+
+/* --- in transit -------------------------------------------------------- */
+/* Sealed, but the wire has not answered yet. */
+.env__transit{
+  position:absolute;left:.6%;right:.6%;top:23.4%;height:35.3%;
+  overflow:hidden;pointer-events:none;z-index:5;
+}
+.env__transit::after{
+  content:'';position:absolute;top:0;bottom:0;width:34%;
+  background:linear-gradient(102deg,
+    transparent, rgba(255,246,220,.46) 46%, transparent);
+  animation:transit 1.6s var(--ease-out) infinite;
+}
+@keyframes transit{from{transform:translateX(-150%)}to{transform:translateX(340%)}}
+
+/* --- the stamp --------------------------------------------------------- */
+/* Outside the fold, so it stays crisp 2D type. It never fades in: it comes
+   down oversize, over-rotated, and settles - and the envelope jolts under
+   it on the frame it lands. */
+.seal{
+  position:absolute;top:21.5%;right:4.5%;z-index:6;
+  font-family:var(--font-d);font-size:1.85em;line-height:1;
+  letter-spacing:.18em;text-transform:uppercase;
+  padding:.24em .46em .3em;
+  border:.13em double currentColor;
+  transform-origin:74% 36%;
+  mix-blend-mode:multiply;opacity:.92;pointer-events:none;
+}
+.seal[data-ok='true']{color:var(--green)}
+.seal[data-ok='false']{color:var(--red)}
+
+/* ============================================== CONTACT LEFT: after a loss
+
+   The note does not get added to the page - it takes the standing channel
+   list's place. Nothing scrolls, so nothing may grow. */
+.unfold{
+  align-self:flex-start;margin-top:.5em;padding:.2em 0;
+  background:none;border:0;cursor:pointer;
+  font-family:var(--font-d);font-size:.78em;letter-spacing:.1em;
+  color:var(--red);border-bottom:1px dotted var(--red);
+}
+.unfold:hover{color:var(--red-soft);border-bottom-color:var(--red-soft)}
+.unfold:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+
+.note{
+  position:relative;margin:1.2em .3em 0;padding:1.15em 1.1em 1em;
+  color:var(--ink);
+  background-color:#e6c7be;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23p)' opacity='.14'/%3E%3C/svg%3E"),
+    linear-gradient(168deg, #f2d6ce 0%, #e6c7be 55%, #d8b4a9 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.45) inset,
+    0 .55em 1.3em -.5em rgba(14,9,3,.6);
+}
+/* a strip of tape, because a note in a paper file is stuck to something */
+.note__tape{
+  position:absolute;top:-.6em;left:50%;width:5em;height:1.25em;
+  transform:translateX(-50%) rotate(-1.4deg);
+  background:linear-gradient(180deg, rgba(246,240,220,.62), rgba(232,224,198,.5));
+  border-left:1px solid rgba(255,255,255,.4);
+  border-right:1px solid rgba(255,255,255,.4);
+  box-shadow:0 1px 3px rgba(14,9,3,.28);
+}
+.note__t{
+  margin:0 0 .8em;font-size:.94em;line-height:1.55;
+  color:#3a1f18;text-wrap:pretty;
+}
+.note__acts{display:flex;gap:.5em;flex-wrap:wrap}
+.note__btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:2.7em;padding:0 1.15em;
+  font-family:var(--font-d);font-size:.82em;letter-spacing:.13em;
+  color:#3a1f18;text-decoration:none;
+  border:1px solid rgba(58,31,24,.45);
+  background:rgba(255,248,240,.5);
+  transition:background 140ms linear, transform 140ms var(--ease-snap);
+}
+.note__btn:hover{background:rgba(255,252,246,.9);transform:translateY(-1px)}
+.note__btn:active{transform:translateY(1px)}
+.note__btn:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+
+/* Sent. The button is not disabled-looking, it is pressed in and done. */
+.ping[data-sent]{
+  opacity:1;cursor:default;
+  background:#5f1d14;border-color:#4a150e;color:#f0cfc6;
+  transform:translateY(2px);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.5), 0 1px 0 rgba(255,220,200,.1);
+}
