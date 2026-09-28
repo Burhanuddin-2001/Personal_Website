@@ -14,6 +14,7 @@ dist-ssr/
 
 # ─── Frozen old site (kept in git history) ─────────────────────
 v1/
+resume_texcode/
 
 # ─── Unused source material (not referenced by the app) ────────
 src/assets/profile-source.avif
