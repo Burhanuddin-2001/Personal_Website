@@ -56,6 +56,7 @@ import {
   ContactLeft, ContactRight,
   sendStatus,
 } from './pages.jsx';
+import './styles.css';
 
 const FORM_ID = 'send-word';
 const LAST = projects.length - 1;
@@ -84,8 +85,10 @@ function parseHash(h) {
   if (!h || h === '#') return { open: false };
   if (['#resume', '#work', '#contact'].includes(h)) return { open: true, s: h.slice(1), i: 0 };
   const m = h.match(/^#case\/(.+)$/);
-  const i = m ? projects.findIndex((p) => p.slug === m[1]) : -1;
-  return i >= 0 ? { open: true, s: 'project', i } : null;
+  // #case-2 is the phone's form of the same address.
+  const n = h.match(/^#case-(\d+)$/);
+  const i = m ? projects.findIndex((p) => p.slug === m[1]) : n ? Number(n[1]) - 1 : -1;
+  return projects[i] ? { open: true, s: 'project', i } : null;
 }
 
 const TITLES = { resume: 'Personnel Record', work: 'Case Index', contact: 'Send Word' };
@@ -276,11 +279,6 @@ export default function App() {
      tabs are tugged once when it has sat idle, and again whenever the cover
      is clicked. Once the file has been opened the hint is never needed. */
   const [nudge, setNudge] = useState(false);
-
-  /* Mobile is not built yet (rule 10). A touch-first screen gets told so,
-     plainly, before the file drops. It can still go on. */
-  const [phone, setPhone] = useState(() =>
-    matchMedia('(hover: none) and (pointer: coarse)').matches);
   const foundTabs = useRef(false);
   const nudgeTabs = useCallback(() => {
     setNudge(true);
@@ -516,20 +514,6 @@ export default function App() {
      and still reports completion, so land() and settleCover() still run. */
   return (
     <MotionConfig reducedMotion="user">
-      {phone && (
-        <div className="mobile-note" role="alertdialog" aria-modal="true"
-             aria-labelledby="mobile-note-text">
-          <div className="mobile-note__slip">
-            <p id="mobile-note-text">
-              This site is not optimized for mobile devices.
-              Please open it on a desktop.
-            </p>
-            <button type="button" onClick={() => setPhone(false)} autoFocus>
-              Open anyway
-            </button>
-          </div>
-        </div>
-      )}
       <a className="skip" href="#file">Skip to the file</a>
 
       <div className="backdrop" aria-hidden="true" />

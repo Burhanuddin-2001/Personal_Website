@@ -1,0 +1,319 @@
+/* =========================================================================
+   THE DRAWER — the phone version. The desktop never loads this file.
+
+   No 3D here. The pull is a 2D lift, so none of the preserve-3d traps can
+   reach the drawer.
+   ========================================================================= */
+
+:root{
+  --steel-hi:#d9dde0;
+  --steel:#8e9296;
+  --steel-lo:#4b4e51;
+  --brass-hi:#e2c27a;
+  --brass:#b38d47;
+  --brass-lo:#7a5c25;
+  --cream:#f4eedd;
+  --carbon:#cdd6de;
+  --carbon-ink:#1f3a5f;
+  --interior:#15110d;
+  /* Paper grain, the same noise the desktop uses, as one tile. */
+  --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+}
+
+/* The frame. Sized from the visual viewport by viewport.js, never from vh,
+   so the browser bars and the keyboard can never push it into a scroll. */
+.m-shell{
+  position:fixed;left:0;top:0;width:100%;
+  height:var(--vvh,100svh);
+  transform:translateY(var(--vvt,0px));
+  overflow:hidden;overscroll-behavior:none;
+  background:
+    radial-gradient(120% 60% at 50% 30%, #261f18, transparent 70%),
+    var(--interior);
+}
+.m-shell button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.m-shell a{-webkit-tap-highlight-color:transparent}
+.m-shell :focus-visible{outline:2px solid var(--red-bright);outline-offset:2px}
+
+.m-drawer,.m-box{position:absolute;inset:0}
+
+/* The steel hanging rails, down both walls of the drawer. They show beside
+   an open folder too: the folder still stands in the drawer. */
+.m-rails::before,.m-rails::after{
+  content:'';position:absolute;top:0;bottom:0;width:6px;
+  background:linear-gradient(90deg,var(--steel-lo),var(--steel-hi) 45%,var(--steel) 70%,var(--steel-lo));
+  box-shadow:0 0 6px rgba(0,0,0,.6);
+}
+.m-rails::before{left:3px}
+.m-rails::after{right:3px}
+
+/* The lamp's pool (lamp.js sets its warmth from the clock). Every folder
+   hangs above it, so it lights the steel and the gaps, never the paper. Its
+   scale is the pull: it widens as a sheet comes up into the light. */
+.m-lamp{
+  position:absolute;top:-8%;height:80%;
+  left:calc(50% - 70% * var(--lamp-size,1));width:calc(140% * var(--lamp-size,1));
+  background:radial-gradient(closest-side,var(--lamp,transparent),transparent);
+  transform-origin:50% 25%;pointer-events:none;
+}
+
+/* ------------------------------------------------------------ the folders
+   The folder box is wider than what it draws; only the tab and the sheet
+   take touches, so a folder never eats a tap meant for the one behind. */
+.m-folder{position:absolute;left:12px;right:12px;top:0;pointer-events:none}
+
+/* The shadow a lifted folder throws on the folders behind it. A layer of
+   its own, faded by the lift: box-shadow is never animated. */
+.m-folder__shadow{
+  position:absolute;left:-10px;right:-10px;top:-34px;height:120px;
+  background:radial-gradient(60% 50% at 50% 60%, rgba(0,0,0,.55), transparent 75%);
+}
+
+.m-folder__back{
+  position:absolute;top:40px;left:0;right:0;bottom:0;
+  border-radius:3px 3px 0 0;
+  background:var(--noise),linear-gradient(180deg,var(--kraft-lit),var(--kraft) 30%,var(--kraft-dark));
+  /* The back flap, offset behind. */
+  box-shadow:8px -6px 0 var(--kraft-dark), inset 0 1px 0 rgba(255,255,255,.25);
+}
+/* The hooks the folder hangs by, resting on the rails. */
+.m-folder__back::before,.m-folder__back::after{
+  content:'';position:absolute;top:3px;width:12px;height:6px;border-radius:2px;
+  background:linear-gradient(180deg,var(--steel-hi),var(--steel-lo));
+}
+.m-folder__back::before{left:-10px}
+.m-folder__back::after{right:-10px}
+.m-folder__shade{position:absolute;inset:0;background:#0e0b08;pointer-events:none}
+
+/* The hit box is never rotated and never under 44px. The paper inside it
+   carries the tilt and takes no touches of its own. */
+.m-shell .m-tab{
+  position:absolute;top:0;left:0;height:44px;min-width:44px;
+  padding:0;border:0;background:none;
+  pointer-events:auto;touch-action:none;cursor:grab;
+}
+.m-tab__paper{
+  position:relative;display:block;height:48px;padding:0 14px;
+  border-radius:7px 7px 0 0;
+  background:var(--noise),linear-gradient(180deg,var(--kraft-lit),var(--kraft));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 -1px 3px rgba(0,0,0,.35);
+  font:13px/42px var(--font-d);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink);white-space:nowrap;pointer-events:none;
+}
+/* The ridged notch: the grip. */
+.m-tab__paper::after{
+  content:'';position:absolute;left:50%;bottom:7px;width:18px;height:5px;margin-left:-9px;
+  background:repeating-linear-gradient(180deg,rgba(25,22,18,.4) 0 1px,transparent 1px 2px);
+}
+.m-tab__dot{color:var(--red)}
+
+/* ------------------------------------------------------------ the papers
+   Three kinds, so a folder can be told by its paper. */
+.m-sheet{
+  position:absolute;top:52px;left:10px;right:10px;bottom:10px;
+  /* A paper that does not fit is a layout bug; clipped, the overflow probe
+     sees it. */
+  overflow:hidden;
+  container-type:size;   /* the papers tighten on a short sheet */
+  pointer-events:auto;touch-action:pan-y;
+  padding:8px 10px;color:var(--ink);
+  box-shadow:0 1px 3px rgba(0,0,0,.35);
+}
+.m-sheet__title{
+  margin:0;font:400 12px/1.4 var(--font-d);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink);
+}
+.m-sheet__title:focus{outline:none}
+.m-sheet--record{background:var(--noise),var(--cream)}
+.m-sheet--ledger{
+  padding-left:36px;
+  background:
+    radial-gradient(circle at 13px 18%, var(--interior) 0 5px, transparent 6px),
+    radial-gradient(circle at 13px 50%, var(--interior) 0 5px, transparent 6px),
+    radial-gradient(circle at 13px 82%, var(--interior) 0 5px, transparent 6px),
+    linear-gradient(90deg,transparent 27px,rgba(214,96,120,.6) 27px 28px,transparent 28px),
+    repeating-linear-gradient(180deg,transparent 0 21px,rgba(60,130,90,.28) 21px 22px),
+    #f1f2e4;
+}
+.m-sheet--carbon{
+  padding-left:24px;color:var(--carbon-ink);
+  background:
+    radial-gradient(circle at 8px 50%, var(--interior) 0 2.5px, transparent 3px) 0 0/16px 12px repeat-y,
+    var(--noise),var(--carbon);
+}
+.m-sheet--carbon .m-sheet__title{color:var(--carbon-ink)}
+
+/* ------------------------------------------------------------ the pockets
+   The front of each folder. It stays in the drawer while the sheet comes up
+   out of it, and goes down with the drawer when a folder is open. */
+.m-pocket{
+  position:absolute;left:12px;right:12px;height:var(--vvh,100svh);
+  transform-origin:50% 0;pointer-events:none;
+  border-top:2px solid var(--kraft-lit);
+  background:var(--noise),linear-gradient(180deg,var(--kraft-lit),var(--kraft) 18%,var(--kraft-dark));
+  box-shadow:0 -3px 8px rgba(0,0,0,.4);
+}
+.m-pocket::before{
+  content:'';position:absolute;inset:0;background:#0e0b08;opacity:var(--shade);
+}
+.m-pocket__no{
+  position:absolute;left:18px;top:16px;margin:0;
+  font:13px/1 var(--font-d);letter-spacing:.14em;color:rgba(25,22,18,.78);
+}
+.m-route{
+  position:absolute;right:16px;top:10px;margin:0;padding:6px 10px;
+  background:var(--noise),var(--paper);
+  font:12px/1.35 var(--font-d);letter-spacing:.08em;text-transform:uppercase;color:var(--red);
+  transform:rotate(2.5deg);box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
+/* The PDF tag, held to the Resume folder by a paper clip. A plain link: the
+   gesture machine never starts on one. */
+.m-pdf{
+  position:absolute;right:16px;top:-66px;height:44px;min-width:64px;
+  display:flex;align-items:center;gap:6px;padding:0 12px 0 18px;white-space:nowrap;
+  background:var(--noise),var(--paper);color:var(--red);text-decoration:none;
+  font:13px/1 var(--font-d);letter-spacing:.1em;
+  transform:rotate(-3deg);box-shadow:0 2px 5px rgba(0,0,0,.35);
+  pointer-events:auto;
+}
+.m-pdf::before{
+  content:'';position:absolute;left:-6px;top:-8px;width:12px;height:30px;
+  border:2px solid var(--steel);border-radius:6px;
+}
+
+/* -------------------------------------------------------- the release line */
+.m-line{
+  position:absolute;left:12px;right:12px;height:0;z-index:15;
+  border-top:2px dashed var(--red-bright);transform-origin:0 50%;pointer-events:none;
+}
+.m-line span{
+  position:absolute;right:0;top:6px;padding:3px 8px;
+  background:var(--red);color:var(--paper);
+  font:12px/1 var(--font-d);letter-spacing:.12em;text-transform:uppercase;
+}
+
+/* ---------------------------------------------------------- the peek row */
+.m-peek{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  display:flex;flex-direction:column;padding:4px 12px 0;
+  background:linear-gradient(180deg,#1d1813,var(--interior));
+  box-shadow:0 -6px 12px rgba(0,0,0,.6);
+}
+.m-peek[hidden]{display:none}   /* the keyboard is up */
+.m-peek__caption{
+  margin:0 0 6px;text-align:center;
+  font:12px/1.3 var(--font-d);letter-spacing:.14em;text-transform:uppercase;color:var(--paper-2);
+}
+.m-peek__slots{
+  flex:1;display:grid;grid-template-columns:56px repeat(4,1fr);gap:4px;align-items:start;
+}
+.m-peek__slots button{
+  position:relative;height:100%;min-height:44px;padding:8px 2px 0;
+  border:0;border-radius:6px 6px 0 0;cursor:pointer;
+  font:clamp(12px,3.4vw,13px)/1.15 var(--font-d);text-transform:uppercase;
+}
+.m-peek__back{
+  background:transparent;color:var(--paper);
+  outline:2px dashed var(--red-bright);outline-offset:-4px;
+}
+.m-peek__tab{
+  color:var(--ink);
+  background:var(--noise),linear-gradient(180deg,var(--kraft-lit) 0 46px,var(--kraft-dark) 46px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+}
+/* Already opened: it stands a little proud, with a thumbprint on its tab. */
+.m-peek__tab.is-opened{transform:translateY(-8px)}
+.m-peek__tab.is-opened::after{
+  content:'';position:absolute;right:5px;top:5px;width:12px;height:15px;border-radius:50%;
+  background:repeating-radial-gradient(ellipse at 50% 60%,rgba(25,22,18,.32) 0 1px,transparent 1px 3px);
+}
+.m-peek__label{display:block;white-space:nowrap}
+
+/* ------------------------------------------------------- the cabinet face */
+.m-plate{
+  position:absolute;left:0;right:0;top:0;z-index:30;
+  padding:max(12px, env(safe-area-inset-top)) 12px 0;
+  background:
+    radial-gradient(90% 80% at 50% 0%,var(--lamp,transparent),transparent 75%),   /* the lamp on the steel */
+    repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px),
+    linear-gradient(180deg,#5d5850,#3e3a34 55%,#2c2925);
+  border-bottom:2px solid #171512;
+  box-shadow:0 8px 16px rgba(0,0,0,.6);
+}
+/* The brass holder and its two screws. */
+.m-holder{
+  position:relative;padding:6px;border-radius:4px;
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass) 40%,var(--brass-lo));
+  box-shadow:0 2px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.m-holder::before,.m-holder::after{
+  content:'';position:absolute;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#f1e4c0,#6b5020);
+}
+.m-holder::before{left:-9px}
+.m-holder::after{right:-9px}
+.m-card{
+  position:relative;padding:8px 12px 24px;color:var(--ink);
+  background:
+    linear-gradient(180deg,transparent 24px,rgba(157,43,32,.35) 24px 25px,transparent 25px),
+    var(--noise),var(--cream);
+}
+.m-card__top{
+  display:flex;justify-content:space-between;gap:8px;margin:0 0 2px;
+  font:12px/1.3 var(--font-d);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);
+}
+.m-card__status{color:var(--green)}
+.m-card__name{
+  margin:0;font:400 27px/1.15 var(--font-d);letter-spacing:.05em;text-transform:uppercase;
+}
+.m-card__role{
+  margin:0 0 4px;font:13px/1.3 var(--font-d);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--red);
+}
+.m-card__claim{margin:0;font:15px/1.4 var(--font-b);color:var(--ink-2)}
+
+.m-stamp{
+  margin:0;padding:3px 9px;pointer-events:none;
+  font:15px/1.1 var(--font-d);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--red-soft);border:2px solid currentColor;border-radius:3px;
+}
+/* RECEIVED: on the card's lower-right corner, half off it, clear of the
+   file number. */
+.m-received{
+  position:absolute;right:10px;bottom:-16px;
+  background:rgba(244,238,221,.55);transform:rotate(-6deg);
+}
+
+.m-plate__row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:44px;margin:8px 0 6px;
+}
+.m-shell .m-sound{
+  display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;
+  border:1px solid var(--brass-lo);border-radius:4px;cursor:pointer;
+  background:linear-gradient(180deg,var(--brass-hi),var(--brass) 55%,var(--brass-lo));
+  color:#2a1f0e;font:12px/1 var(--font-d);letter-spacing:.12em;text-transform:uppercase;
+  box-shadow:0 2px 4px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.m-sound__lamp{width:8px;height:8px;border-radius:50%;background:#3b2f1b;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
+.m-sound[aria-pressed='true'] .m-sound__lamp{background:#ffd98a;box-shadow:0 0 6px 1px #ffb84a}
+.m-hint{
+  margin:0;text-align:right;
+  font:12px/1.3 var(--font-d);letter-spacing:.1em;text-transform:uppercase;color:#e6dcc6;
+}
+
+/* The room before the lamp clicks on. */
+.m-dark{position:absolute;inset:0;z-index:40;background:#050403;pointer-events:none}
+
+/* ------------------------------------------------------- held sideways */
+.m-turn{
+  position:absolute;inset:0;z-index:50;
+  display:grid;place-items:center;padding:24px;
+  background:rgba(8,6,5,.9);
+}
+.m-turn__slip{
+  margin:0;padding:20px 22px;
+  background:var(--paper);color:var(--ink);
+  font:15px/1.5 var(--font-d);letter-spacing:.1em;text-transform:uppercase;
+  transform:rotate(-1.2deg);
+}

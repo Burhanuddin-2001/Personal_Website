@@ -5,90 +5,9 @@
      1. The page NEVER scrolls. Only the paper inside the file scrolls.
      2. The action bar is ALWAYS on screen. Back, close and send are never
         below the fold.
-     3. One portrait file, the same shape on a phone and on a laptop.
+     3. Desktop only. Phones get src/mobile/ and never load this file.
+        Tokens and fonts live in base.css, shared by both.
    ========================================================================= */
-
-/* ------------------------------------------------------------------ fonts
-   Full TTFs, not subsets. v1 subset Special Elite to uppercase only, which
-   meant any rule that forgot text-transform fell back mid-word. No size
-   budget here, so that whole class of bug is simply deleted. */
-@font-face{
-  font-family:'Special Elite';
-  src:url('./assets/fonts/Special_Elite/SpecialElite-Regular.ttf') format('truetype');
-  font-weight:400;font-style:normal;font-display:swap;
-}
-@font-face{
-  font-family:'Courier Prime';
-  src:url('./assets/fonts/Courier_Prime/CourierPrime-Regular.ttf') format('truetype');
-  font-weight:400;font-style:normal;font-display:swap;
-}
-@font-face{
-  font-family:'Courier Prime';
-  src:url('./assets/fonts/Courier_Prime/CourierPrime-Bold.ttf') format('truetype');
-  font-weight:700;font-style:normal;font-display:swap;
-}
-@font-face{
-  font-family:'Courier Prime';
-  src:url('./assets/fonts/Courier_Prime/CourierPrime-Italic.ttf') format('truetype');
-  font-weight:400;font-style:italic;font-display:swap;
-}
-
-/* ----------------------------------------------------------------- tokens */
-:root{
-  --void:#0e0c0a;
-  --void-2:#1a1510;
-
-  --kraft:#c9ac76;
-  --kraft-lit:#d8bd8b;
-  --kraft-dark:#ab8f5c;
-  --kraft-edge:#8d7444;
-  --paper:#f2ecdd;
-  --paper-2:#e4dac2;
-
-  --ink:#191612;          /* 8.3:1 on kraft */
-  --ink-2:#443d33;        /* 4.9:1 on kraft */
-  --ink-3:#6b6155;
-
-  --red:#7a1a10;          /* 5.1:1 on kraft — meaningful red */
-  --red-soft:#9d2b20;     /* decoration only */
-  --red-bright:#e0553f;
-  --green:#1c5426;
-  --thread:#2c4a6e;
-
-  --font-d:'Special Elite','Courier New',monospace;
-  --font-b:'Courier Prime','Courier New',monospace;
-
-  --tabw:clamp(30px,7vw,42px);   /* how far the bookmarks stick out */
-  --gap:clamp(12px,2.2vw,28px);
-
-  --ease-out:cubic-bezier(.16,1,.3,1);
-  --ease-snap:cubic-bezier(.2,.8,.25,1);
-}
-
-*,*::before,*::after{box-sizing:border-box}
-
-html,body{
-  height:100%;
-  /* RULE 1. The page never scrolls. */
-  overflow:hidden;
-  overscroll-behavior:none;
-}
-
-body{
-  margin:0;
-  background:var(--void);
-  color:var(--paper);
-  font:16px/1.6 var(--font-b);
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
-
-/* A button does not inherit font. Without this the case-card taglines set
-   no family of their own, fell to the UA's Arial, and every em inside a
-   card was an em of the UA's fixed 13.3px instead of the page's. */
-button{font-family:inherit;font-size:inherit}
-
-#root{height:100%}
 
 /* ============================================================== BACKDROP
    Not a desk. Just depth, so the file has somewhere to land. */
@@ -739,28 +658,6 @@ button{font-family:inherit;font-size:inherit}
             color:var(--ink);text-decoration:none;font-family:var(--font-d)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;
     clip:rect(0 0 0 0);white-space:nowrap}
-
-/* ---------------------------------------------------------- mobile note
-   Shown on touch-first screens until mobile is built. A paper slip over
-   the desk, not a banner. */
-.mobile-note{
-  position:fixed;inset:0;z-index:100;
-  display:grid;place-items:center;padding:24px;
-  background:rgba(8,6,5,.86);
-}
-.mobile-note__slip{
-  max-width:340px;padding:22px 20px 18px;
-  background:var(--paper);color:var(--ink);
-  box-shadow:0 14px 40px rgba(0,0,0,.6);
-  transform:rotate(-1.2deg);
-  font:15px/1.55 var(--font-b);text-align:center;
-}
-.mobile-note__slip p{margin:0 0 16px}
-.mobile-note__slip button{
-  font-family:var(--font-d);letter-spacing:.12em;text-transform:uppercase;
-  font-size:12px;padding:9px 16px;cursor:pointer;
-  background:transparent;color:var(--red);border:2px solid var(--red);
-}
 
 /* -------------------------------------------------------- short screens */
 /* Short windows: shrink the furniture before the content. */

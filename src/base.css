@@ -1,0 +1,86 @@
+/* =========================================================================
+   BASE — shared by the desktop dossier and the phone drawer.
+   Tokens, fonts and the page itself. Nothing here may assume either layout.
+   ========================================================================= */
+
+/* ------------------------------------------------------------------ fonts
+   Full TTFs, not subsets. v1 subset Special Elite to uppercase only, which
+   meant any rule that forgot text-transform fell back mid-word. No size
+   budget here, so that whole class of bug is simply deleted. */
+@font-face{
+  font-family:'Special Elite';
+  src:url('./assets/fonts/Special_Elite/SpecialElite-Regular.ttf') format('truetype');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Courier Prime';
+  src:url('./assets/fonts/Courier_Prime/CourierPrime-Regular.ttf') format('truetype');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Courier Prime';
+  src:url('./assets/fonts/Courier_Prime/CourierPrime-Bold.ttf') format('truetype');
+  font-weight:700;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Courier Prime';
+  src:url('./assets/fonts/Courier_Prime/CourierPrime-Italic.ttf') format('truetype');
+  font-weight:400;font-style:italic;font-display:swap;
+}
+
+/* ----------------------------------------------------------------- tokens */
+:root{
+  --void:#0e0c0a;
+  --void-2:#1a1510;
+
+  --kraft:#c9ac76;
+  --kraft-lit:#d8bd8b;
+  --kraft-dark:#ab8f5c;
+  --kraft-edge:#8d7444;
+  --paper:#f2ecdd;
+  --paper-2:#e4dac2;
+
+  --ink:#191612;          /* 8.3:1 on kraft */
+  --ink-2:#443d33;        /* 4.9:1 on kraft */
+  --ink-3:#6b6155;
+
+  --red:#7a1a10;          /* 5.1:1 on kraft — meaningful red */
+  --red-soft:#9d2b20;     /* decoration only */
+  --red-bright:#e0553f;
+  --green:#1c5426;
+  --thread:#2c4a6e;
+
+  --font-d:'Special Elite','Courier New',monospace;
+  --font-b:'Courier Prime','Courier New',monospace;
+
+  --tabw:clamp(30px,7vw,42px);   /* how far the bookmarks stick out */
+  --gap:clamp(12px,2.2vw,28px);
+
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-snap:cubic-bezier(.2,.8,.25,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+html,body{
+  height:100%;
+  /* RULE 1. The page never scrolls. */
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--paper);
+  font:16px/1.6 var(--font-b);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* A button does not inherit font. Without this the case-card taglines set
+   no family of their own, fell to the UA's Arial, and every em inside a
+   card was an em of the UA's fixed 13.3px instead of the page's. */
+button{font-family:inherit;font-size:inherit}
+
+#root{height:100%}

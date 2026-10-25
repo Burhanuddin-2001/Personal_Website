@@ -5,6 +5,13 @@ export const profile = {
   name: 'Burhanuddin',
   title: 'Cybersecurity Engineer',
   intro: 'Building the tools used to compromise systems, so I can engineer the exact countermeasures to stop them.',
+  status: 'Open to work',
+  fileNo: 'NL-02-1026',   // the file's own number, typed on the phone's index card
+  appointed: 'Stanford, Section Leader',
+
+  // What REQUEST AN INTERVIEW puts in the phone's message field. The visitor
+  // edits it and sends it themselves; it never names them.
+  interviewDraft: 'Hello Burhanuddin, I read your file. I would like to set up an interview for a cybersecurity role. When are you free for a short call?',
 
   // The Field chips on the personnel record, and knowsAbout in the JSON-LD.
   field: [
