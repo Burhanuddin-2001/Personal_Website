@@ -16,8 +16,10 @@
   --carbon:#cdd6de;
   --carbon-ink:#1f3a5f;
   --interior:#15110d;
-  /* Paper grain, the same noise the desktop uses, as one tile. */
-  --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  /* Paper grain: the desktop's noise, drawn once at 2x into a picture. As
+     an SVG filter it was worked out again on every repaint, for every
+     paper that carries it, which a weak phone cannot do at 60 fps. */
+  --noise:-webkit-image-set(url('../assets/noise.webp') 2x);
 }
 
 /* The frame. Sized from the visual viewport by viewport.js, never from vh,
@@ -36,6 +38,13 @@
 .m-shell :focus-visible{outline:2px solid var(--red-bright);outline-offset:2px}
 
 .m-drawer,.m-box{position:absolute;inset:0}
+
+/* Every part that moves is a layer of its own, so a move is only put
+   together again, never painted again. Without this, each frame of a pull
+   repaints the whole drawer. The back and the sheet only ever narrow
+   (scaleX up to 1), so they are drawn at full size and stay sharp. */
+.m-folder,.m-folder__back,.m-sheet,.m-pocket,.m-plate,.m-peek,.m-lamp{will-change:transform}
+.m-folder__shadow,.m-folder__shade,.m-dark{will-change:opacity}
 
 /* The steel hanging rails, down both walls of the drawer. They show beside
    an open folder too: the folder still stands in the drawer. */

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { createContext, useContext, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { profile } from '../../profile.js';
 import { CLOSE } from '../motion.js';
@@ -25,8 +25,13 @@ const RULES = {
 /* Web3Forms field name -> the draft's key. */
 const DRAFT = { name_field: 'name', contact_field: 'contact', message: 'message' };
 
+/* What the slip reads from the phone app. A context, not props: a typed
+   letter then re-renders the slip alone, not the drawer and every folder. */
+export const Slip = createContext(null);
+
 /* The transmission slip, on blue-grey carbon. */
-export default function Contact({ draft, send, keyboard, h, onDraft, onPing, onUnfolded, onSent }) {
+export default function Contact() {
+  const { draft, send, keyboard, h, onDraft, onPing, onUnfolded, onSent } = useContext(Slip);
   const [errors, setErrors] = useState({});
   const [focused, setFocused] = useState(null);
   const [lift, setLift] = useState(0);

@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import { load, save } from '../storage.js';
 import { sendMessage } from '../submit.js';
@@ -10,7 +10,7 @@ import Drawer from './Drawer.jsx';
 import Filed from './Filed.jsx';
 import Resume from './papers/Resume.jsx';
 import Case from './papers/Case.jsx';
-import Contact from './papers/Contact.jsx';
+import Contact, { Slip } from './papers/Contact.jsx';
 import './mobile.css';
 import './papers.css';
 
@@ -93,15 +93,15 @@ export default function Mobile() {
 
   /* From the drawer, a folder is a step in history: Back puts it away.
      From one folder to another it is not, so Back always reaches the drawer. */
-  const open = (id, swap) => {
+  const open = useCallback((id, swap) => {
     history[swap ? 'replaceState' : 'pushState'](OURS, '', `#${id}`);
     go({ type: 'open', id });
-  };
-  const close = () => {
+  }, []);
+  const close = useCallback(() => {
     if (history.state?.drawer) return history.back();   // popstate closes it
     history.replaceState(null, '', ROOT());
     go({ type: 'open', id: null });
-  };
+  }, []);
 
   useEffect(() => {
     if (!s.folder) return;
@@ -119,27 +119,28 @@ export default function Mobile() {
     if (ok) save('dossier.m.routed', letter.name);
   };
 
-  const paper = (id) => {
+  /* Never changes, so the drawer can skip a render that is only the slip's. */
+  const paper = useCallback((id) => {
     if (id === 'resume') {
       return <Resume onInterview={() => { go({ type: 'interview' }); open('contact', true); }} />;
     }
-    if (id === 'contact') {
-      return (
-        <Contact draft={s.draft} send={s.send} keyboard={keyboard} h={h}
-                 onDraft={(key, value) => go({ type: 'draft', key, value })} onPing={ping}
-                 onUnfolded={() => go({ type: 'unfolded' })} onSent={() => go({ type: 'filed' })} />
-      );
-    }
+    if (id === 'contact') return <Contact />;
     return <Case n={Number(id.slice(5))} />;
-  };
+  }, [open]);
 
   const { status, letter } = s.send;
   return (
     <MotionConfig reducedMotion="user">
       <div className="m-shell">
-        <Drawer w={w} h={h} keyboard={keyboard} folder={s.folder} opened={s.opened}
-                filing={!!letter && status !== 'lost'} inert={!!s.filed} paper={paper}
-                onOpen={open} onClose={close} />
+        <Slip.Provider value={{
+          draft: s.draft, send: s.send, keyboard, h, onPing: ping,
+          onDraft: (key, value) => go({ type: 'draft', key, value }),
+          onUnfolded: () => go({ type: 'unfolded' }), onSent: () => go({ type: 'filed' }),
+        }}>
+          <Drawer w={w} h={h} keyboard={keyboard} folder={s.folder} opened={s.opened}
+                  filing={!!letter && status !== 'lost'} inert={!!s.filed} paper={paper}
+                  onOpen={open} onClose={close} />
+        </Slip.Provider>
         <AnimatePresence>
           {/* The folder is put away behind the shut drawer, once it is shut. */}
           {s.filed && <Filed key="filed" h={h} letter={s.filed}

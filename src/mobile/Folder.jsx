@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { memo, useRef } from 'react';
 import { motion, useTransform } from 'motion/react';
 import { profile } from '../profile.js';
 
@@ -19,8 +19,9 @@ const DEPTH = [
 /* One hanging folder: the part that lifts (tab, back, sheet) and the front
    pocket that stays in the drawer. The sheet that rises under the thumb IS
    the open sheet - nothing swaps on release. The pocket stays behind while
-   the sheet comes up out of it. */
-export default function Folder({ f, i, y, rest, height, w, open, away, pocketY, onTap, children }) {
+   the sheet comes up out of it. Memoised: a pull or a typed letter must not
+   re-render all five folders. */
+export default memo(function Folder({ f, i, y, rest, height, w, open, away, pocketY, onOpen, onClose, children }) {
   // Read live by the transforms below; a closure would keep the first rest.
   const restAt = useRef(rest);
   restAt.current = rest;
@@ -43,7 +44,7 @@ export default function Folder({ f, i, y, rest, height, w, open, away, pocketY, 
         <motion.button type="button" className="m-tab" data-handle={open ? 'tab-open' : 'tab-closed'}
                        data-folder={i} aria-expanded={open} aria-controls={`sheet-${f.id}`}
                        initial={false} animate={{ x: open ? 0 : TAB_X[i] * (w - 24) }}
-                       onClick={onTap}>
+                       onClick={() => (open ? onClose() : onOpen(f.id))}>
           <span className="m-tab__paper" style={{ transform: `rotate(${TILT[i]}deg)` }}>
             {resume && <span className="m-tab__dot" aria-hidden="true">● </span>}
             {f.tab}
@@ -73,4 +74,4 @@ export default function Folder({ f, i, y, rest, height, w, open, away, pocketY, 
       </motion.div>
     </>
   );
-}
+});

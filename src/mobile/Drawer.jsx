@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { animate, motion, motionValue, useTransform } from 'motion/react';
 import { play } from '../sound.js';
 import { useGesture } from './gesture.js';
@@ -28,7 +28,7 @@ function layout(h, plate) {
    of the frame: its rest on the rail, 0 when open, below the frame while
    another folder is open. The plate, the pockets and the peek row each have
    one y for the whole set. */
-export default function Drawer({ w, h, keyboard, folder, opened, filing, inert, paper, onOpen, onClose }) {
+export default memo(function Drawer({ w, h, keyboard, folder, opened, filing, inert, paper, onOpen, onClose }) {
   const root = useRef(null);
   const plateRef = useRef(null);
   const stampRef = useRef(null);
@@ -57,6 +57,9 @@ export default function Drawer({ w, h, keyboard, folder, opened, filing, inert, 
   // The lamp's pool widens as a sheet comes up into its light.
   const pool = useTransform(ys, (v) => 1 + 0.4 * Math.max(...v.map((y, i) =>
     Math.min(1, Math.max(0, 1 - y / geo.current.g.rest(i))))));
+
+  // Made once, so a move of the drawer never re-renders the papers.
+  const papers = useMemo(() => HUNG.map((f) => paper(f.id)), [paper]);
 
   // The plate is as tall as its card, and the card as tall as its type.
   useLayoutEffect(() => {
@@ -203,8 +206,8 @@ export default function Drawer({ w, h, keyboard, folder, opened, filing, inert, 
           // With the keyboard up the peek row goes, and the sheet has it all.
           <Folder key={f.id} f={f} i={i} y={ys[i]} rest={g.rest(i)} height={h - (keyboard ? 0 : g.peek)}
                   w={w} open={o === i} away={o >= 0} pocketY={m.pockets}
-                  onTap={() => (o === i ? onClose() : onOpen(f.id))}>
-            {paper(f.id)}
+                  onOpen={onOpen} onClose={onClose}>
+            {papers[i]}
           </Folder>
         ))}
         <motion.div className="m-line" aria-hidden="true" style={{ top: line ?? 0 }}
@@ -225,4 +228,4 @@ export default function Drawer({ w, h, keyboard, folder, opened, filing, inert, 
       <motion.div className="m-dark" aria-hidden="true" style={{ opacity: m.dark }} />
     </div>
   );
-}
+});
