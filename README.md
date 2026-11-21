@@ -72,6 +72,8 @@ image in `public/assets/`, and the site address in `index.html`,
 
 ## Changelog
 
+**Version 2.2** - Improved mobile performance with optimized rendering, reduced client-side processing, and smoother interactions.
+
 **Version 2.1** - A separate phone version: the filing-cabinet drawer, with
 pull-to-open folders, the envelope send, sound and a desk lamp that follows
 the visitor's clock.
